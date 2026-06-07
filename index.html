@@ -525,10 +525,16 @@
             };
         }
 
-        function spawnMonster() {
+        function spawnMonster(keepHp = false) {
             let stats = getMonsterScaling();
+            let oldHpPct = monster.maxHp > 0 ? (monster.hp / monster.maxHp) : 1;
             monster.maxHp = stats.maxHp;
-            monster.hp = stats.maxHp;
+            if(keepHp && oldHpPct > 0) {
+                // 回復 20% 作為懲罰，但不要直接回滿
+                monster.hp = Math.floor(Math.min(monster.maxHp, monster.maxHp * oldHpPct + (monster.maxHp * 0.2)));
+            } else {
+                monster.hp = stats.maxHp;
+            }
             monster.atk = stats.atk;
             monster.icon = stats.icon;
             monster.type = stats.type;
@@ -606,7 +612,7 @@
             for(let i=0; i<3; i++) {
                 if(player.skillCDs[i] > 0) player.skillCDs[i]--;
             }
-            spawnMonster(); 
+            spawnMonster(true); // Retain HP percentage when updating buttons
         }
 
         function executePlayerAction(type, slotIdx = -1, skillData = null) {
@@ -661,6 +667,10 @@
             if(monster.type === 'elite' || monster.type === 'boss') {
                 let regenMult = monster.type === 'boss' ? 3 : 1;
                 let regenAmt = Math.floor(5 + (state.stage * regenMult));
+                // 限制最多只回復總血量的 5% ~ 10%，避免回滿
+                let maxRegen = Math.floor(monster.maxHp * (monster.type === 'boss' ? 0.1 : 0.05));
+                regenAmt = Math.min(regenAmt, Math.max(1, maxRegen));
+                
                 if(monster.hp < monster.maxHp) {
                     monster.hp = Math.min(monster.maxHp, monster.hp + regenAmt);
                     showFloatingText('sprite-monster', `+${regenAmt}`, '#2ecc71');
@@ -721,7 +731,7 @@
             saveState();
             
             setTimeout(() => {
-                spawnMonster();
+                spawnMonster(true); // 死亡後降級，但怪物血量依比例繼承(不直接回滿)
                 combatBlocked = false;
             }, 1000);
         }
@@ -1047,7 +1057,7 @@
                 recalculatePlayerStats();
             } else {
                 state.skillSlots[currentSelectCtx.slot] = id;
-                spawnMonster(); 
+                spawnMonster(true); 
             }
             saveState();
             renderRolePage();
