@@ -552,7 +552,10 @@
             else { badge.innerText = ''; }
 
             updateHealthBars();
-            
+            updateCombatButtons();
+        }
+
+        function updateCombatButtons() {
             const actionsDiv = document.getElementById('combat-actions');
             for(let i=0; i<3; i++) {
                 let btn = document.getElementById(`btn-skill-${i}`);
@@ -612,7 +615,7 @@
             for(let i=0; i<3; i++) {
                 if(player.skillCDs[i] > 0) player.skillCDs[i]--;
             }
-            spawnMonster(true); // Retain HP percentage when updating buttons
+            updateCombatButtons();
         }
 
         function executePlayerAction(type, slotIdx = -1, skillData = null) {
@@ -775,13 +778,14 @@
                 if(state.history.length > 50) state.history.pop(); // Keep last 50
 
                 // Rewards!
-                state.coins += 100; 
+                let coinReward = Math.floor(Math.sqrt(amt));
+                state.coins += coinReward; 
                 player.hasMoneyBuff = true;
                 player.hp = Math.min(player.maxHp, player.hp + Math.floor(player.maxHp * 0.5)); 
                 updateHealthBars();
                 
                 document.getElementById('player-buff').style.display = 'block';
-                showToast(`✨ 記帳完成！獲得 100 🪙 與【鈔能力】！`);
+                showToast(`✨ 記帳完成！獲得 ${coinReward} 🪙 與【鈔能力】！`);
                 
                 checkTimeLimitedTask();
                 saveState();
@@ -1057,7 +1061,7 @@
                 recalculatePlayerStats();
             } else {
                 state.skillSlots[currentSelectCtx.slot] = id;
-                spawnMonster(true); 
+                updateCombatButtons(); 
             }
             saveState();
             renderRolePage();
