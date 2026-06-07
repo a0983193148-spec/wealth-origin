@@ -3,911 +3,658 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>財富原點 - 史詩冒險</title>
-    <!-- Include qrcode.js -->
+    <title>財富原點 - 記帳冒險譚</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root {
-            /* Dark Fantasy Theme Variables */
-            --bg-dark: #0f111a;
-            --panel-bg: rgba(25, 28, 41, 0.75);
-            --panel-border: rgba(142, 140, 166, 0.3);
-            --text-main: #e2e2e8;
-            --text-gold: #ffcf54;
-            --text-dim: #8b8996;
-            --accent-blue: #4a90e2;
-            --accent-purple: #9b59b6;
-            --btn-bg: linear-gradient(145deg, #2a2d3e, #1f212d);
-            --btn-border: #4d4f61;
-            --btn-active: #151720;
-            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-            --glass-blur: blur(12px);
-            --radius-lg: 16px;
+            --bg-dark: #121212;
+            --panel-bg: rgba(30, 30, 30, 0.85);
+            --panel-border: #444;
+            --text-main: #f0f0f0;
+            --text-gold: #ffcc00;
+            --text-dim: #999;
+            --hp-green: #2ecc71;
+            --hp-red: #e74c3c;
+            --mp-blue: #3498db;
+            --btn-bg: linear-gradient(145deg, #2c3e50, #1a252f);
+            --btn-border: #34495e;
+            --glass-blur: blur(10px);
             --radius-md: 10px;
-            --radius-sm: 6px;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Georgia', serif; /* A bit more classic/RPG feel */
-            user-select: none;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Georgia', serif; user-select: none; }
+        body { background-color: var(--bg-dark); color: var(--text-main); display: flex; justify-content: center; height: 100vh; overflow: hidden; position: relative; }
 
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* Animated CSS Background */
-        .stars {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: 
-                radial-gradient(circle at 15% 50%, rgba(76, 39, 114, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 85% 30%, rgba(38, 93, 148, 0.3) 0%, transparent 50%);
-            z-index: 0;
+        /* Background */
+        .combat-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
+            background: linear-gradient(to bottom, #1a0b2e, #0b1a2e);
             overflow: hidden;
         }
-
-        .particle {
-            position: absolute;
-            width: 3px; height: 3px;
-            background: #fff;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #fff, 0 0 20px var(--text-gold);
-            animation: float-up linear infinite;
+        .combat-bg::after { /* Ground */
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 40%;
+            background: linear-gradient(to top, #0f1626, transparent);
         }
 
-        @keyframes float-up {
-            0% { transform: translateY(100vh) scale(0); opacity: 0; }
-            50% { opacity: 0.8; }
-            100% { transform: translateY(-20vh) scale(1); opacity: 0; }
-        }
+        #app { width: 100%; max-width: 414px; height: 100%; position: relative; z-index: 1; display: flex; flex-direction: column; background: transparent; }
 
-        /* App Container */
-        #app {
-            width: 100%;
-            max-width: 414px;
-            height: 100%;
-            max-height: 896px;
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            background: transparent;
-            display: none; /* Hidden until login */
-        }
+        .glass-panel { background: var(--panel-bg); backdrop-filter: var(--glass-blur); border: 1px solid var(--panel-border); border-radius: var(--radius-md); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
 
-        /* Glassmorphism Panels */
-        .glass-panel {
-            background: var(--panel-bg);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--panel-border);
-            box-shadow: var(--shadow);
-            border-radius: var(--radius-lg);
-        }
-
-        /* Status Bar */
-        .status-bar {
-            padding: 15px;
-            margin: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .status-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .player-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .player-name {
-            font-size: 16px;
-            font-weight: bold;
-            color: var(--text-gold);
-            text-shadow: 0 0 5px rgba(255, 207, 84, 0.5);
-        }
-
-        .level-badge {
-            font-size: 12px;
-            color: var(--text-dim);
-        }
-
-        .currencies {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
-        }
-
-        .currency {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .coins { color: #f1c40f; }
-        .gems { color: #e74c3c; }
-
-        .exp-container {
-            background: rgba(0, 0, 0, 0.5);
-            height: 10px;
-            border-radius: 5px;
-            border: 1px solid #333;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .exp-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #2ecc71, #27ae60);
-            width: 0%;
-            transition: width 0.3s;
-        }
+        /* Top Bar */
+        .status-bar { padding: 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--panel-border); background: var(--panel-bg); z-index: 10;}
+        .stage-badge { font-weight: bold; color: var(--text-gold); font-size: 14px; background: #000; padding: 4px 8px; border-radius: 4px; border: 1px solid #555; }
+        .currency { display: flex; gap: 10px; font-weight: bold; font-size: 14px; }
 
         /* Pages */
-        .page {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-            padding-bottom: 90px;
-            display: none;
-            animation: fadeIn 0.4s;
-        }
+        .page { flex: 1; overflow-y: auto; display: none; padding-bottom: 90px; animation: fadeIn 0.3s; position: relative; z-index: 1; }
+        .page.active { display: flex; flex-direction: column; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .page.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.98); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        /* --- Explore Page (Home) --- */
+        /* --- Combat Page (Explore) --- */
+        .combat-arena { flex: 1; display: flex; flex-direction: column; position: relative; }
+        .sprites-area { flex: 1; display: flex; justify-content: space-between; align-items: center; padding: 20px; position: relative; }
         
-        /* Adventure Log */
-        .adventure-log {
-            height: 80px;
-            margin-bottom: 15px;
-            padding: 10px;
-            overflow-y: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            position: relative;
-        }
+        .entity { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100px; position: relative; }
+        .sprite { font-size: 80px; filter: drop-shadow(0 0 10px rgba(0,0,0,0.8)); transition: transform 0.2s; }
+        .sprite.player { transform: scaleX(-1); } /* flip horizontally if needed, or just keep as is. Let's keep normal */
+        .name-tag { font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000; text-align:center;}
         
-        .adventure-log::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 20px;
-            background: linear-gradient(to bottom, var(--panel-bg), transparent);
-            z-index: 2;
-        }
+        .bar-container { width: 100%; height: 8px; background: #222; border-radius: 4px; border: 1px solid #000; overflow: hidden; margin-top: 2px;}
+        .bar-fill { height: 100%; transition: width 0.3s, background-color 0.3s; }
+        .bar-text { font-size: 10px; position: absolute; width:100%; text-align: center; top: -14px; text-shadow: 1px 1px 1px #000; }
 
-        .log-entry {
-            font-size: 14px;
-            line-height: 1.4;
-            margin-top: 5px;
-            animation: slideUpFade 0.5s forwards;
-            opacity: 0;
-            color: var(--text-dim);
-        }
+        /* Animations */
+        .anim-attack-right { animation: attackRight 0.3s ease-in-out; }
+        .anim-attack-left { animation: attackLeft 0.3s ease-in-out; }
+        .anim-hit { animation: shake 0.3s; filter: drop-shadow(0 0 20px red) brightness(2) !important; }
+
+        @keyframes attackRight { 0%{transform: translateX(0);} 50%{transform: translateX(40px) scale(1.1);} 100%{transform: translateX(0);} }
+        @keyframes attackLeft { 0%{transform: translateX(0);} 50%{transform: translateX(-40px) scale(1.1);} 100%{transform: translateX(0);} }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+
+        /* Floating Text */
+        .floating-text { position: absolute; font-weight: bold; font-size: 24px; pointer-events: none; animation: floatUpFade 1s forwards; z-index: 50; text-shadow: 0 0 5px #000; }
+        @keyframes floatUpFade { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-50px) scale(1.5); } }
+
+        /* Combat UI Bottom */
+        .combat-controls { padding: 15px; border-top: 1px solid var(--panel-border); background: var(--panel-bg); }
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .action-btn { background: var(--btn-bg); border: 1px solid var(--btn-border); color: white; padding: 15px 5px; border-radius: 8px; font-weight: bold; cursor: pointer; text-align:center; position: relative;}
+        .action-btn:active { background: #151720; }
+        .action-btn.disabled { opacity: 0.5; pointer-events: none; filter: grayscale(1); }
+        .cd-overlay { position: absolute; bottom: 2px; right: 5px; font-size: 10px; color: #f39c12; }
+
+        /* --- Accounting FAB & Modal --- */
+        .fab { position: absolute; bottom: 80px; right: 20px; width: 60px; height: 60px; background: linear-gradient(135deg, #f1c40f, #e67e22); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 30px; color: #fff; box-shadow: 0 4px 15px rgba(241, 196, 15, 0.5); cursor: pointer; z-index: 100; transition: transform 0.2s; border: 2px solid #fff; }
+        .fab:active { transform: scale(0.9); }
+
+        .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 200; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .accounting-panel { width: 90%; max-width: 350px; padding: 20px; position: relative; }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; color: #fff; cursor: pointer; }
+
+        /* Numpad specific */
+        .amount-display { font-size: 32px; text-align: right; margin: 15px 0; border-bottom: 2px solid #555; padding-bottom: 5px; color: var(--text-gold); }
+        .cat-row { display: flex; justify-content: space-between; margin-bottom: 15px; overflow-x: auto; }
+        .cat-btn { background: #333; border: 1px solid #555; border-radius: 8px; width: 45px; height: 45px; font-size: 20px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        .cat-btn.selected { border-color: var(--text-gold); background: rgba(255, 204, 0, 0.2); }
+        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .num-btn { background: #222; border: 1px solid #444; color: #fff; font-size: 22px; padding: 15px 0; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .num-btn.enter { background: #27ae60; border-color: #2ecc71; color: #fff; grid-row: span 2; display: flex; align-items: center; justify-content: center; writing-mode: vertical-lr; text-orientation: upright; letter-spacing: 2px;}
+
+        /* --- Role Page (角色) --- */
+        .role-stats { text-align: center; padding: 20px 10px; margin: 10px; }
+        .stat-line { display: flex; justify-content: space-around; margin-top: 10px; font-size: 16px; font-weight: bold; }
         
-        .log-entry:last-child {
-            color: var(--text-main);
-            font-weight: bold;
-        }
+        .equip-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; padding: 10px; margin: 0 10px 10px 10px; }
+        .equip-slot { background: rgba(0,0,0,0.5); border: 1px dashed var(--text-dim); border-radius: 8px; height: 60px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; font-size: 24px; position: relative;}
+        .slot-label { font-size: 10px; color: var(--text-dim); position: absolute; bottom: 2px; }
+        .equip-slot.filled { border: 1px solid var(--text-gold); background: rgba(255, 204, 0, 0.1); }
 
-        .log-rare { color: var(--accent-purple); text-shadow: 0 0 5px var(--accent-purple); }
-        .log-epic { color: var(--text-gold); text-shadow: 0 0 5px var(--text-gold); }
+        .skill-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 10px; margin: 0 10px; }
+        .skill-slot { background: rgba(0,0,0,0.5); border: 1px dashed #3498db; border-radius: 8px; height: 70px; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; font-size: 24px; }
+        .skill-slot.filled { border: 1px solid #3498db; background: rgba(52, 152, 219, 0.1); }
 
-        @keyframes slideUpFade {
-            from { transform: translateY(10px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
+        /* --- Selection Modal (Equip/Skill) --- */
+        .selection-list { max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .sel-item { display: flex; align-items: center; gap: 15px; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid #555; border-radius: 8px; cursor: pointer; }
+        .sel-item:hover { border-color: var(--text-gold); }
+        .sel-icon { font-size: 30px; }
+        .sel-details { flex: 1; }
+        .sel-name { font-weight: bold; font-size: 14px; }
+        .sel-stats { font-size: 12px; color: var(--text-gold); margin-top: 4px; }
 
-        /* Numpad Area */
-        .amount-display {
-            font-size: 32px;
-            text-align: right;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-bottom: 1px solid var(--btn-border);
-            color: var(--text-gold);
-            font-family: 'Courier New', Courier, monospace;
-            text-shadow: 0 0 10px rgba(255, 207, 84, 0.3);
-            min-height: 55px;
-        }
+        /* --- Market (市集) --- */
+        .gacha-container { display: flex; flex-direction: column; gap: 20px; padding: 20px; }
+        .gacha-banner { padding: 20px; text-align: center; border: 1px solid var(--panel-border); border-radius: 12px; background: rgba(0,0,0,0.4); }
+        .gacha-banner h3 { color: var(--text-gold); margin-bottom: 5px; }
+        .gacha-banner button { margin-top: 15px; padding: 10px 20px; background: linear-gradient(to right, #8e44ad, #9b59b6); border: none; color: white; font-weight: bold; border-radius: 20px; cursor: pointer; width: 100%; box-shadow: 0 0 10px rgba(142, 68, 173, 0.5); }
 
-        .categories {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            overflow-x: auto;
-            gap: 10px;
-        }
-
-        .cat-btn {
-            background: var(--btn-bg);
-            border: 1px solid var(--btn-border);
-            border-radius: var(--radius-sm);
-            font-size: 20px;
-            width: 45px;
-            height: 45px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-
-        .cat-btn.selected {
-            border-color: var(--text-gold);
-            box-shadow: 0 0 10px rgba(255, 207, 84, 0.5);
-            transform: translateY(-2px);
-        }
-
-        .numpad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-
-        .num-btn {
-            background: var(--btn-bg);
-            border: 1px solid var(--btn-border);
-            border-radius: var(--radius-md);
-            padding: 15px;
-            font-size: 20px;
-            color: var(--text-main);
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            text-shadow: 1px 1px 2px #000;
-        }
-
-        .num-btn:active {
-            background: var(--btn-active);
-            transform: translateY(2px);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-        }
-
-        .btn-enter {
-            background: linear-gradient(145deg, #8e44ad, #9b59b6);
-            border-color: #8e44ad;
-            color: white;
-            text-shadow: 0 0 5px rgba(255,255,255,0.5);
-        }
-
-        .btn-clear {
-            color: #e74c3c;
-        }
-        
-        /* History List */
-        .section-title {
-            font-size: 16px;
-            color: var(--text-gold);
-            margin: 20px 0 10px 0;
-            border-bottom: 1px solid var(--btn-border);
-            padding-bottom: 5px;
-        }
-        
-        .history-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .history-item {
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--panel-border);
-            padding: 10px;
-            border-radius: var(--radius-sm);
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-        }
-
-        /* --- Inventory Page (行囊) --- */
-        .equipped-panel {
-            text-align: center;
-            padding: 20px;
-            margin-bottom: 15px;
-            border: 1px solid var(--text-gold);
-            box-shadow: 0 0 15px rgba(255, 207, 84, 0.2) inset;
-        }
-        
-        .equipped-icon {
-            font-size: 40px;
-            margin-bottom: 10px;
-            filter: drop-shadow(0 0 10px var(--text-gold));
-        }
-        
-        .inventory-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-        
-        .inv-item {
-            background: rgba(0,0,0,0.4);
-            border: 1px solid var(--btn-border);
-            padding: 15px;
-            border-radius: var(--radius-md);
-            text-align: center;
-            cursor: pointer;
-        }
-        
-        .inv-item.equipped {
-            border-color: var(--text-gold);
-            background: rgba(255, 207, 84, 0.1);
-        }
-        
-        .inv-btn {
-            margin-top: 10px;
-            width: 100%;
-            padding: 5px;
-            background: var(--btn-bg);
-            border: 1px solid var(--btn-border);
-            color: var(--text-main);
-            border-radius: var(--radius-sm);
-        }
-
-        /* --- Tasks Page (任務) --- */
-        .task-card {
-            background: rgba(0,0,0,0.4);
-            border: 1px solid var(--btn-border);
-            padding: 15px;
-            border-radius: var(--radius-md);
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .task-reward {
-            color: #e74c3c; /* Gems color */
-            font-size: 14px;
-            margin-top: 5px;
-        }
-
-        .btn-claim {
-            background: linear-gradient(145deg, #e67e22, #d35400);
-            border: 1px solid #d35400;
-            color: white;
-            padding: 8px 15px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .btn-claim:disabled {
-            background: #333;
-            border-color: #222;
-            color: #777;
-            cursor: not-allowed;
-        }
-
-        /* --- Market Page (市集) --- */
-        .gacha-panel {
-            text-align: center;
-            padding: 30px 20px;
-        }
-        
-        .gacha-altar {
-            font-size: 80px;
-            margin-bottom: 20px;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { filter: drop-shadow(0 0 10px var(--accent-purple)); }
-            50% { filter: drop-shadow(0 0 30px var(--accent-purple)); }
-            100% { filter: drop-shadow(0 0 10px var(--accent-purple)); }
-        }
-
-        .btn-gacha {
-            background: linear-gradient(145deg, #9b59b6, #8e44ad);
-            border: 1px solid #9b59b6;
-            color: white;
-            padding: 15px 30px;
-            font-size: 18px;
-            border-radius: var(--radius-lg);
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 0 15px rgba(155, 89, 182, 0.5);
-            width: 100%;
-        }
-
-        /* --- Temple Page (神殿) --- */
-        .offer-card {
-            background: rgba(0,0,0,0.4);
-            border: 1px solid var(--btn-border);
-            padding: 15px;
-            border-radius: var(--radius-md);
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .btn-redeem {
-            background: linear-gradient(145deg, #c0392b, #e74c3c);
-            border: 1px solid #c0392b;
-            color: white;
-            padding: 8px 15px;
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-weight: bold;
-        }
+        /* --- Tasks & Temple --- */
+        .list-container { padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+        .card { background: rgba(0,0,0,0.4); border: 1px solid var(--panel-border); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .card-btn { padding: 8px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-claim { background: #27ae60; color: white; }
+        .btn-claim:disabled { background: #555; color: #888; }
+        .btn-redeem { background: #e74c3c; color: white; }
+        .task-tag { font-size: 10px; padding: 2px 6px; border-radius: 4px; border: 1px solid #f39c12; color: #f39c12; margin-bottom: 5px; display: inline-block; }
+        .task-tag.time { border-color: #3498db; color: #3498db; }
 
         /* Nav Bar */
-        .nav-bar {
-            position: absolute;
-            bottom: 0; left: 0; width: 100%;
-            height: 70px;
-            background: var(--panel-bg);
-            backdrop-filter: var(--glass-blur);
-            border-top: 1px solid var(--panel-border);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 10;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            color: var(--text-dim);
-            cursor: pointer;
-            transition: color 0.3s;
-            flex: 1;
-        }
-
-        .nav-item.active {
-            color: var(--text-gold);
-            text-shadow: 0 0 10px rgba(255, 207, 84, 0.5);
-        }
-
+        .nav-bar { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background: var(--panel-bg); backdrop-filter: var(--glass-blur); border-top: 1px solid var(--panel-border); display: flex; justify-content: space-around; align-items: center; z-index: 10; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-dim); cursor: pointer; flex: 1; font-size: 10px; }
+        .nav-item.active { color: var(--text-gold); text-shadow: 0 0 5px rgba(255, 204, 0, 0.5); }
         .nav-icon { font-size: 20px; }
-        .nav-text { font-size: 12px; }
 
-        /* Modal */
-        .modal-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(5px);
-            z-index: 100;
-            display: none;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: var(--panel-bg);
-            border: 2px solid var(--text-gold);
-            width: 85%;
-            border-radius: var(--radius-lg);
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 0 30px rgba(255, 207, 84, 0.2);
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        @keyframes popIn {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        #qrcode {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0;
-            padding: 15px;
-            background: #fff;
-            border-radius: 10px;
-        }
-
-        /* Toast */
-        .toast {
-            position: absolute;
-            top: 120px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            border: 1px solid var(--panel-border);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 14px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-            z-index: 50;
-            white-space: nowrap;
-        }
-
-        /* Login Screen */
-        #login-screen {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 200;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 30px;
-        }
-
-        .login-title {
-            font-size: 36px;
-            color: var(--text-gold);
-            margin-bottom: 30px;
-            text-shadow: 0 0 15px rgba(255,207,84,0.5);
-        }
-
-        .login-input {
-            background: rgba(0,0,0,0.5);
-            border: 1px solid var(--panel-border);
-            color: white;
-            padding: 15px;
-            border-radius: var(--radius-md);
-            margin-bottom: 20px;
-            width: 100%;
-            text-align: center;
-            font-size: 18px;
-        }
+        /* Buff Indicator */
+        .buff-icon { position: absolute; top: -20px; right: -10px; font-size: 24px; filter: drop-shadow(0 0 5px gold); animation: float 1s infinite alternate; display: none; }
+        @keyframes float { from{transform: translateY(0);} to{transform: translateY(-5px);} }
         
-        .login-btn {
-            background: linear-gradient(145deg, #27ae60, #2ecc71);
-            border: 1px solid #27ae60;
-            color: white;
-            padding: 15px;
-            width: 100%;
-            border-radius: var(--radius-md);
-            font-size: 18px;
-            cursor: pointer;
-        }
+        .toast { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 1px solid var(--text-gold); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 300; white-space: nowrap; font-weight: bold;}
+
     </style>
 </head>
 <body>
+    <div class="combat-bg"></div>
 
-    <!-- Animated Particles Background -->
-    <div class="stars" id="stars-container"></div>
-
-    <!-- Login Screen -->
-    <div id="login-screen" class="glass-panel" style="background:transparent; border:none; box-shadow:none;">
-        <div style="font-size: 80px; margin-bottom: 20px;">🐉</div>
-        <div class="login-title">財富原點</div>
-        <p style="color:var(--text-dim); margin-bottom: 20px;">締結冒險契約，開啟你的理財史詩</p>
-        <input type="text" id="username-input" class="login-input" placeholder="冒險者，報上名來">
-        <button class="login-btn" onclick="login()">踏入深淵</button>
-    </div>
-
-    <!-- Main App -->
     <div id="app">
         <!-- Top Status Bar -->
-        <div class="status-bar glass-panel">
-            <div class="status-top">
-                <div class="player-info">
-                    <span class="player-name" id="title-display">未知冒險者</span>
-                    <span class="level-badge" id="level-display">LV.1 (0/100 XP)</span>
-                </div>
-                <div class="currencies">
-                    <div class="currency coins">🪙 <span id="coin-display">0</span></div>
-                    <div class="currency gems">💎 <span id="gem-display">0</span></div>
-                </div>
-            </div>
-            <div class="exp-container">
-                <div class="exp-bar" id="exp-bar"></div>
+        <div class="status-bar">
+            <div class="stage-badge" id="stage-display">關卡 1-1</div>
+            <div style="display:flex; gap:15px;">
+                <div class="currency">🪙 <span id="coin-val">0</span></div>
+                <div class="currency">💎 <span id="gem-val">0</span></div>
             </div>
         </div>
 
         <div class="toast" id="toast"></div>
 
-        <!-- 1. 探索 (Home/Accounting) -->
-        <div id="page-home" class="page active">
-            <!-- Text Adventure Broadcast -->
-            <div class="adventure-log glass-panel" id="adventure-log">
-                <div class="log-entry">系統：歡迎來到財富原點，冒險即將展開...</div>
-            </div>
+        <!-- 1. 探索 (Combat) -->
+        <div id="page-combat" class="page active">
+            <div class="combat-arena">
+                <div class="sprites-area">
+                    <!-- Player -->
+                    <div class="entity">
+                        <div class="name-tag" id="player-name">勇者</div>
+                        <div class="buff-icon" id="player-buff">💸</div>
+                        <div class="sprite player" id="sprite-player">🧙‍♂️</div>
+                        <div style="width:100%;">
+                            <div class="bar-container" style="position:relative;">
+                                <div class="bar-text" id="player-hp-txt" style="color:#fff;">100/100</div>
+                                <div class="bar-fill" id="player-hp-fill" style="background:var(--hp-green); width:100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="font-size:30px; font-weight:bold; color:#7f8c8d; opacity:0.3;">VS</div>
 
-            <!-- Numpad Area -->
-            <div class="glass-panel" style="padding: 15px;">
-                <div class="amount-display">$<span id="amount-input">0</span></div>
-                
-                <div class="categories">
-                    <button class="cat-btn selected" onclick="selectCat(this, '🍖')">🍖</button>
-                    <button class="cat-btn" onclick="selectCat(this, '🧪')">🧪</button>
-                    <button class="cat-btn" onclick="selectCat(this, '🗡️')">🗡️</button>
-                    <button class="cat-btn" onclick="selectCat(this, '🐎')">🐎</button>
-                    <button class="cat-btn" onclick="selectCat(this, '📜')">📜</button>
+                    <!-- Monster -->
+                    <div class="entity">
+                        <div class="name-tag" id="monster-name" style="color:#e74c3c;">史萊姆</div>
+                        <div class="sprite" id="sprite-monster">💧</div>
+                        <div style="width:100%;">
+                            <div class="bar-container" style="position:relative;">
+                                <div class="bar-text" id="monster-hp-txt" style="color:#fff;">50/50</div>
+                                <div class="bar-fill" id="monster-hp-fill" style="background:var(--hp-red); width:100%;"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="numpad">
-                    <button class="num-btn" onclick="inputNum('1')">1</button>
-                    <button class="num-btn" onclick="inputNum('2')">2</button>
-                    <button class="num-btn" onclick="inputNum('3')">3</button>
-                    <button class="num-btn" onclick="inputNum('4')">4</button>
-                    <button class="num-btn" onclick="inputNum('5')">5</button>
-                    <button class="num-btn" onclick="inputNum('6')">6</button>
-                    <button class="num-btn" onclick="inputNum('7')">7</button>
-                    <button class="num-btn" onclick="inputNum('8')">8</button>
-                    <button class="num-btn" onclick="inputNum('9')">9</button>
-                    <button class="num-btn btn-clear" onclick="inputNum('C')">C</button>
-                    <button class="num-btn" onclick="inputNum('0')">0</button>
-                    <button class="num-btn btn-enter" onclick="inputNum('Enter')">斬擊!</button>
+                <div class="combat-controls">
+                    <div class="action-grid" id="combat-actions">
+                        <div class="action-btn" onclick="executePlayerAction('attack')">普通攻擊<br><span style="font-size:10px;color:#aaa;">(造成 ATK 傷害)</span></div>
+                        <div class="action-btn disabled" id="btn-skill-0">未裝備技能</div>
+                        <div class="action-btn disabled" id="btn-skill-1">未裝備技能</div>
+                        <div class="action-btn disabled" id="btn-skill-2">未裝備技能</div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="section-title">冒險足跡 (歷史記帳)</div>
-            <div class="history-list" id="history-list">
-                <!-- History items -->
             </div>
         </div>
 
-        <!-- 2. 行囊 (Inventory) -->
-        <div id="page-inventory" class="page">
-            <div class="equipped-panel glass-panel">
-                <div style="color:var(--text-dim); font-size:12px; margin-bottom:5px;">目前裝備</div>
-                <div class="equipped-icon" id="eq-icon">❓</div>
-                <h3 id="eq-name">無裝備</h3>
-                <p style="color:var(--text-gold); font-size:14px; margin-top:5px;" id="eq-bonus">加成：0%</p>
+        <!-- 2. 角色 (Role/Equip) -->
+        <div id="page-role" class="page">
+            <div class="role-stats glass-panel">
+                <h2 style="color:var(--text-gold);">綜合戰鬥面板</h2>
+                <div class="stat-line"><span>總攻擊力 (ATK)</span><span id="stat-atk">10</span></div>
+                <div class="stat-line"><span>總生命值 (HP)</span><span id="stat-hp">100</span></div>
             </div>
-            
-            <div class="section-title">我的行囊</div>
-            <div class="inventory-grid" id="inventory-list">
-                <!-- Inventory items -->
+
+            <h3 style="margin: 10px 15px; font-size:14px; color:var(--text-dim);">裝備 (點擊更換)</h3>
+            <div class="equip-grid">
+                <div class="equip-slot" id="slot-weapon" onclick="openSelectionModal('equip', 'weapon')"><span class="slot-label">武器</span>❓</div>
+                <div class="equip-slot" id="slot-helmet" onclick="openSelectionModal('equip', 'helmet')"><span class="slot-label">頭盔</span>❓</div>
+                <div class="equip-slot" id="slot-armor" onclick="openSelectionModal('equip', 'armor')"><span class="slot-label">胸甲</span>❓</div>
+                <div class="equip-slot" id="slot-gloves" onclick="openSelectionModal('equip', 'gloves')"><span class="slot-label">手套</span>❓</div>
+                <div class="equip-slot" id="slot-boots" onclick="openSelectionModal('equip', 'boots')"><span class="slot-label">鞋子</span>❓</div>
+            </div>
+
+            <h3 style="margin: 15px 15px 10px 15px; font-size:14px; color:var(--text-dim);">戰鬥技能配置 (最多3招)</h3>
+            <div class="skill-grid">
+                <div class="skill-slot" id="slot-skill-0" onclick="openSelectionModal('skill', 0)">❓<br><span style="font-size:10px;">技能一</span></div>
+                <div class="skill-slot" id="slot-skill-1" onclick="openSelectionModal('skill', 1)">❓<br><span style="font-size:10px;">技能二</span></div>
+                <div class="skill-slot" id="slot-skill-2" onclick="openSelectionModal('skill', 2)">❓<br><span style="font-size:10px;">技能三</span></div>
             </div>
         </div>
 
         <!-- 3. 任務 (Tasks) -->
         <div id="page-tasks" class="page">
-            <div class="section-title">每日試煉 (每日午夜重置)</div>
-            <div id="task-list">
-                <!-- Tasks -->
+            <div class="list-container" id="tasks-list-container">
+                <!-- Tasks injected via JS -->
             </div>
         </div>
 
         <!-- 4. 市集 (Market/Gacha) -->
         <div id="page-market" class="page">
-            <div class="gacha-panel glass-panel">
-                <div class="gacha-altar">🔮</div>
-                <h2 style="margin-bottom:10px; color:var(--text-gold);">命運之輪</h2>
-                <p style="color:var(--text-dim); font-size:14px; margin-bottom:20px;">
-                    向命運獻上 200 🪙，抽取強大的記帳神器！<br>
-                    (有機會獲得高階加成裝備)
-                </p>
-                <button class="btn-gacha" onclick="drawGacha()">獻祭 200 🪙 進行抽取</button>
+            <div class="gacha-container">
+                <div class="gacha-banner glass-panel">
+                    <div style="font-size:60px;">🛡️</div>
+                    <h3>匠人鐵砧 (裝備池)</h3>
+                    <p style="font-size:12px; color:var(--text-dim);">抽取各部位防具與武器<br>提升基礎數值</p>
+                    <button onclick="drawGacha('equip')">花費 300 🪙 抽取</button>
+                </div>
+                <div class="gacha-banner glass-panel">
+                    <div style="font-size:60px;">📜</div>
+                    <h3>賢者書庫 (技能池)</h3>
+                    <p style="font-size:12px; color:var(--text-dim);">抽取強大的戰鬥技能<br>獲得扭轉戰局的力量</p>
+                    <button onclick="drawGacha('skill')" style="background: linear-gradient(to right, #2980b9, #3498db); box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);">花費 500 🪙 抽取</button>
+                </div>
             </div>
         </div>
 
         <!-- 5. 神殿 (Temple/Offers) -->
         <div id="page-temple" class="page">
-            <div class="section-title">神聖恩賜 (實體兌換)</div>
-            <p style="color:var(--text-dim); font-size:12px; margin-bottom:15px;">消耗 💎 兌換點數以獲得現實中的獎勵。</p>
-            <div id="offer-list">
-                <!-- Offers -->
+            <div style="text-align:center; padding:15px; color:var(--text-dim); font-size:12px;">使用極度珍貴的 💎 鑽石兌換現實世界的獎勵。</div>
+            <div class="list-container" id="offers-list">
+                <!-- Offers injected via JS -->
             </div>
         </div>
+
+        <!-- Floating Action Button for Accounting -->
+        <div class="fab" onclick="openAccountingModal()">📝</div>
 
         <!-- Bottom Nav -->
         <div class="nav-bar">
-            <div class="nav-item active" onclick="switchPage('home', this)">
-                <span class="nav-icon">🗡️</span>
-                <span class="nav-text">探索</span>
-            </div>
-            <div class="nav-item" onclick="switchPage('inventory', this)">
-                <span class="nav-icon">🎒</span>
-                <span class="nav-text">行囊</span>
-            </div>
-            <div class="nav-item" onclick="switchPage('tasks', this)">
-                <span class="nav-icon">📜</span>
-                <span class="nav-text">任務</span>
-            </div>
-            <div class="nav-item" onclick="switchPage('market', this)">
-                <span class="nav-icon">🎪</span>
-                <span class="nav-text">市集</span>
-            </div>
-            <div class="nav-item" onclick="switchPage('temple', this)">
-                <span class="nav-icon">🏛️</span>
-                <span class="nav-text">神殿</span>
+            <div class="nav-item active" onclick="switchPage('combat', this)"><span class="nav-icon">⚔️</span>探索</div>
+            <div class="nav-item" onclick="switchPage('role', this)"><span class="nav-icon">👤</span>角色</div>
+            <div class="nav-item" onclick="switchPage('tasks', this)"><span class="nav-icon">📜</span>任務</div>
+            <div class="nav-item" onclick="switchPage('market', this)"><span class="nav-icon">🎪</span>市集</div>
+            <div class="nav-item" onclick="switchPage('temple', this)"><span class="nav-icon">🏛️</span>神殿</div>
+        </div>
+
+        <!-- Accounting Modal -->
+        <div class="modal-overlay" id="accounting-modal">
+            <div class="glass-panel accounting-panel">
+                <div class="close-btn" onclick="closeAccountingModal()">×</div>
+                <h3 style="color:var(--text-gold); text-align:center;">支援記帳</h3>
+                <p style="text-align:center; font-size:12px; color:var(--text-dim); margin-top:5px;">記帳可獲得 🪙 並發動「鈔能力」Buff！</p>
+                
+                <div class="amount-display">$<span id="amount-input">0</span></div>
+                
+                <div class="cat-row">
+                    <div class="cat-btn selected" onclick="selectCat(this, '🍖')">🍖</div>
+                    <div class="cat-btn" onclick="selectCat(this, '🥤')">🥤</div>
+                    <div class="cat-btn" onclick="selectCat(this, '🚌')">🚌</div>
+                    <div class="cat-btn" onclick="selectCat(this, '🛒')">🛒</div>
+                    <div class="cat-btn" onclick="selectCat(this, '🎮')">🎮</div>
+                </div>
+
+                <div class="numpad">
+                    <div class="num-btn" onclick="inputNum('1')">1</div>
+                    <div class="num-btn" onclick="inputNum('2')">2</div>
+                    <div class="num-btn" onclick="inputNum('3')">3</div>
+                    <div class="num-btn" onclick="inputNum('4')">4</div>
+                    <div class="num-btn" onclick="inputNum('5')">5</div>
+                    <div class="num-btn" onclick="inputNum('6')">6</div>
+                    <div class="num-btn" onclick="inputNum('7')">7</div>
+                    <div class="num-btn" onclick="inputNum('8')">8</div>
+                    <div class="num-btn" onclick="inputNum('9')">9</div>
+                    <div class="num-btn" style="color:#e74c3c;" onclick="inputNum('C')">C</div>
+                    <div class="num-btn" onclick="inputNum('0')">0</div>
+                    <div class="num-btn enter" onclick="inputNum('Enter')">發動</div>
+                </div>
             </div>
         </div>
 
-        <!-- QR Modal -->
-        <div class="modal-overlay" id="coupon-modal">
-            <div class="modal-content">
-                <h2 style="color:var(--text-gold); margin-bottom:10px;" id="modal-coupon-title">神聖恩賜</h2>
-                <div id="qrcode"></div>
-                <div style="font-size:32px; color:#e74c3c; font-weight:bold; margin-bottom:20px; font-family:monospace;" id="modal-timer">03:00</div>
-                <button style="background:#333; color:white; border:1px solid #555; padding:10px 30px; border-radius:5px; cursor:pointer;" onclick="closeModal()">返回神殿</button>
+        <!-- Selection Modal (Equip/Skill) -->
+        <div class="modal-overlay" id="selection-modal">
+            <div class="glass-panel accounting-panel" style="max-height:80%; display:flex; flex-direction:column;">
+                <div class="close-btn" onclick="document.getElementById('selection-modal').style.display='none'">×</div>
+                <h3 style="color:var(--text-gold); text-align:center;" id="sel-title">選擇裝備</h3>
+                <div class="selection-list" id="sel-list">
+                    <!-- Items -->
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Modal for Temple -->
+        <div class="modal-overlay" id="qr-modal">
+            <div class="glass-panel accounting-panel" style="text-align:center;">
+                <h2 style="color:var(--text-gold);" id="qr-title">優惠券</h2>
+                <div id="qrcode" style="margin:20px auto; padding:10px; background:#fff; width:fit-content; border-radius:8px;"></div>
+                <div style="font-size:30px; color:#e74c3c; font-weight:bold;" id="qr-timer">03:00</div>
+                <button style="margin-top:20px; padding:10px 20px; background:#333; color:#fff; border:none; border-radius:5px; cursor:pointer;" onclick="document.getElementById('qr-modal').style.display='none'; clearInterval(qrInterval);">關閉</button>
             </div>
         </div>
 
     </div>
 
     <script>
-        // Create background particles
-        function createParticles() {
-            const container = document.getElementById('stars-container');
-            for(let i=0; i<30; i++) {
-                let p = document.createElement('div');
-                p.className = 'particle';
-                p.style.left = Math.random() * 100 + 'vw';
-                p.style.animationDuration = (Math.random() * 3 + 2) + 's';
-                p.style.animationDelay = Math.random() * 2 + 's';
-                container.appendChild(p);
+        // --- Data Bases ---
+        const EQUIP_DB = [
+            { id: 'w1', type: 'weapon', name: '鐵劍', icon: '🗡️', atk: 15, hp: 0, rarity: 'normal' },
+            { id: 'w2', type: 'weapon', name: '破壞劍', icon: '⚔️', atk: 50, hp: 0, rarity: 'epic' },
+            { id: 'h1', type: 'helmet', name: '皮帽', icon: '🪖', atk: 2, hp: 30, rarity: 'normal' },
+            { id: 'h2', type: 'helmet', name: '皇家金盔', icon: '👑', atk: 10, hp: 100, rarity: 'epic' },
+            { id: 'a1', type: 'armor', name: '布衣', icon: '👕', atk: 0, hp: 50, rarity: 'normal' },
+            { id: 'a2', type: 'armor', name: '聖騎士鎧甲', icon: '🛡️', atk: 5, hp: 200, rarity: 'legendary' },
+            { id: 'g1', type: 'gloves', name: '棉手套', icon: '🧤', atk: 3, hp: 10, rarity: 'normal' },
+            { id: 'b1', type: 'boots', name: '皮靴', icon: '🥾', atk: 5, hp: 20, rarity: 'normal' }
+        ];
+
+        const SKILL_DB = [
+            { id: 's1', name: '重擊', icon: '🔨', type: 'attack', mult: 1.5, cd: 2, desc: '造成 150% 攻擊力傷害' },
+            { id: 's2', name: '治癒術', icon: '✨', type: 'heal', mult: 0.3, cd: 4, desc: '回復最大生命值 30%' },
+            { id: 's3', name: '大火球', icon: '🔥', type: 'attack', mult: 2.5, cd: 4, desc: '造成 250% 攻擊力傷害' }
+        ];
+
+        const MONSTERS = [
+            { id: 1, name: '史萊姆', icon: '💧', baseHp: 50, baseAtk: 5 },
+            { id: 2, name: '哥布林', icon: '👺', baseHp: 80, baseAtk: 12 },
+            { id: 3, name: '骷髏兵', icon: '💀', baseHp: 150, baseAtk: 25 },
+            { id: 4, name: '惡龍', icon: '🐉', baseHp: 500, baseAtk: 50 } // Boss type
+        ];
+
+        // --- State Management ---
+        const DEFAULT_STATE = {
+            stage: 1, // Determines monster scaling (e.g. 1-1 = stage 1)
+            coins: 100,
+            gems: 0,
+            inventory: { equips: [], skills: [] },
+            equipped: { weapon: null, helmet: null, armor: null, gloves: null, boots: null },
+            skillSlots: [null, null, null],
+            tasks: {
+                dailyKill: { count: 0, target: 5, claimed: false, lastReset: null },
+                timeLimit: { claimed: false, lastReset: null }
             }
-        }
-        createParticles();
-
-        // Data Definitions
-        const GACHA_POOL = [
-            { id: 101, name: '初級木算盤', icon: '🧮', bonus: 0.1, rarity: 'Normal' },
-            { id: 102, name: '魔法記帳本', icon: '📓', bonus: 0.2, rarity: 'Rare' },
-            { id: 103, name: '地精金庫', icon: '🏦', bonus: 0.35, rarity: 'Epic' },
-            { id: 104, name: '真理計算機', icon: '🖩', bonus: 0.5, rarity: 'Legendary' }
-        ];
-
-        const EVENTS = [
-            { text: "你在迷霧中推進，平靜無事。", type: "Normal" },
-            { text: "發現一個遺落的錢袋，獲得額外 20 🪙！", type: "Good", coins: 20 },
-            { text: "遭遇野生史萊姆！你用帳單擊退了牠，獲得 15 XP！", type: "Good", exp: 15 },
-            { text: "踩到陷阱！幸好躲避及時，沒有損失。", type: "Normal" },
-            { text: "遇見流浪商人，他被你的記帳習慣感動，贈送 50 🪙！", type: "Epic", coins: 50 }
-        ];
-
-        const defaultState = {
-            level: 1,
-            exp: 0,
-            coins: 100, // 🪙
-            gems: 0,    // 💎
-            lastLoginDate: null,
-            entriesToday: 0,
-            history: [],
-            inventory: [], // Store item IDs
-            equippedId: null,
-            tasks: [
-                { id: 1, title: '每日簽到', desc: '新的一天，新的冒險', rewardGems: 10, completed: false, claimed: false },
-                { id: 2, title: '勤勉記帳', desc: '單日完成 3 筆記帳', rewardGems: 20, completed: false, claimed: false }
-            ],
-            offers: [
-                { id: 1, icon: '🧋', title: '50嵐 9折券', cost: 100, code: '50LAN' },
-                { id: 2, icon: '🍔', title: '麥當勞 買一送一', cost: 250, code: 'MCD' },
-                { id: 3, icon: '🎟️', title: '電影票 8折券', cost: 500, code: 'MOVIE' }
-            ]
         };
 
-        let state = null;
-        let currentUser = null;
-        let currentAmount = "0";
-        let currentCat = "🍖";
-        let timerInterval = null;
+        let state = JSON.parse(localStorage.getItem('rpg_v2_state')) || JSON.parse(JSON.stringify(DEFAULT_STATE));
         
-        const EXP_PER_LEVEL = 100;
+        // Player Combat State
+        let player = { hp: 0, maxHp: 100, atk: 10, skillCDs: [0, 0, 0], hasMoneyBuff: false };
+        let monster = { hp: 0, maxHp: 50, atk: 5, id: 0 };
+        let combatBlocked = false;
 
-        // Init App
-        function login() {
-            const username = document.getElementById('username-input').value.trim();
-            if (!username) {
-                showToast("請輸入你的名號！");
-                return;
-            }
-            currentUser = username;
-            
-            const saved = localStorage.getItem(`rpg_origin_${currentUser}`);
-            if (saved) {
-                state = JSON.parse(saved);
-                // Schema migrations
-                if(state.gems === undefined) state.gems = 0;
-                if(!state.history) state.history = [];
-                if(!state.inventory) state.inventory = [];
-                if(state.equippedId === undefined) state.equippedId = null;
-            } else {
-                state = JSON.parse(JSON.stringify(defaultState));
-            }
-
-            checkDailyReset();
-
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('app').style.display = 'flex';
-            
+        // --- Init ---
+        function init() {
+            recalculatePlayerStats();
+            player.hp = player.maxHp;
+            spawnMonster();
             updateUI();
-            renderHistory();
-            renderInventory();
+            renderRolePage();
             renderTasks();
             renderOffers();
+            checkDailyResets();
+            
+            // Set up game loop / periodic checks
+            setInterval(checkDailyResets, 60000); // Check time conditions every min
         }
 
         function saveState() {
-            if (currentUser && state) {
-                localStorage.setItem(`rpg_origin_${currentUser}`, JSON.stringify(state));
-            }
+            localStorage.setItem('rpg_v2_state', JSON.stringify(state));
             updateUI();
         }
 
-        // Daily Reset Logic
-        function checkDailyReset() {
-            const todayStr = new Date().toISOString().split('T')[0];
-            if (state.lastLoginDate !== todayStr) {
-                state.lastLoginDate = todayStr;
-                state.entriesToday = 0;
-                // Reset daily tasks
-                let t1 = state.tasks.find(t=>t.id===1);
-                let t2 = state.tasks.find(t=>t.id===2);
-                if(t1) { t1.completed = true; t1.claimed = false; } // Daily login auto-completes
-                if(t2) { t2.completed = false; t2.claimed = false; }
-            }
-        }
-
-        // UI Updates
-        function updateUI() {
-            // Level logic
-            let currentLevelReq = state.level * EXP_PER_LEVEL;
-            while (state.exp >= currentLevelReq) {
-                state.level++;
-                state.exp -= currentLevelReq;
-                currentLevelReq = state.level * EXP_PER_LEVEL;
-                showToast(`🌟 境界突破！達到 LV.${state.level}！`);
-            }
+        // --- Core Stats & Formulas ---
+        function recalculatePlayerStats() {
+            let baseAtk = 10 + (state.stage * 2);
+            let baseHp = 100 + (state.stage * 10);
             
-            document.getElementById('level-display').innerText = `LV.${state.level} (${state.exp}/${currentLevelReq} XP)`;
-            document.getElementById('title-display').innerText = currentUser;
-            document.getElementById('coin-display').innerText = state.coins;
-            document.getElementById('gem-display').innerText = state.gems;
+            let eqAtk = 0; let eqHp = 0;
+            Object.values(state.equipped).forEach(eqId => {
+                if (eqId) {
+                    let item = EQUIP_DB.find(i => i.id === eqId);
+                    if(item) { eqAtk += item.atk; eqHp += item.hp; }
+                }
+            });
 
-            let expPercent = (state.exp / currentLevelReq) * 100;
-            document.getElementById('exp-bar').style.width = `${expPercent}%`;
+            player.atk = baseAtk + eqAtk;
+            let oldMax = player.maxHp;
+            player.maxHp = baseHp + eqHp;
             
-            // Update equipped icon in inventory page
-            let eqItem = GACHA_POOL.find(i => i.id === state.equippedId);
-            if(eqItem) {
-                document.getElementById('eq-icon').innerText = eqItem.icon;
-                document.getElementById('eq-name').innerText = eqItem.name;
-                document.getElementById('eq-bonus').innerText = `加成：+${eqItem.bonus * 100}% 🪙`;
+            // Adjust current HP proportionally if max HP changes
+            if(player.hp === 0 || oldMax === 0) player.hp = player.maxHp;
+            else player.hp = Math.min(player.maxHp, Math.round(player.hp * (player.maxHp / oldMax)));
+
+            document.getElementById('stat-atk').innerText = player.atk;
+            document.getElementById('stat-hp').innerText = player.maxHp;
+        }
+
+        function getMonsterScaling() {
+            // Stage e.g., 5 means 1-5. 
+            const idx = (state.stage - 1) % MONSTERS.length;
+            const cycle = Math.floor((state.stage - 1) / MONSTERS.length);
+            const base = MONSTERS[idx];
+            
+            return {
+                name: base.name,
+                icon: base.icon,
+                maxHp: Math.floor(base.baseHp * Math.pow(1.5, cycle) * (1 + (state.stage*0.1))),
+                atk: Math.floor(base.baseAtk * Math.pow(1.3, cycle) * (1 + (state.stage*0.1)))
+            };
+        }
+
+        function spawnMonster() {
+            let stats = getMonsterScaling();
+            monster.maxHp = stats.maxHp;
+            monster.hp = stats.maxHp;
+            monster.atk = stats.atk;
+            monster.icon = stats.icon;
+            
+            let chapter = Math.floor((state.stage - 1) / 10) + 1;
+            let stageNum = ((state.stage - 1) % 10) + 1;
+            
+            document.getElementById('stage-display').innerText = `關卡 ${chapter}-${stageNum}`;
+            document.getElementById('monster-name').innerText = stats.name;
+            document.getElementById('sprite-monster').innerText = stats.icon;
+            updateHealthBars();
+            
+            // Setup combat action buttons based on equipped skills
+            const actionsDiv = document.getElementById('combat-actions');
+            
+            // Skill buttons
+            for(let i=0; i<3; i++) {
+                let btn = document.getElementById(`btn-skill-${i}`);
+                let skillId = state.skillSlots[i];
+                if(skillId) {
+                    let s = SKILL_DB.find(x => x.id === skillId);
+                    btn.className = `action-btn ${player.skillCDs[i] > 0 ? 'disabled' : ''}`;
+                    btn.innerHTML = `${s.icon} ${s.name}<br><span style="font-size:10px;color:#aaa;">(CD:${s.cd})</span>`;
+                    if(player.skillCDs[i] > 0) btn.innerHTML += `<div class="cd-overlay">CD ${player.skillCDs[i]}</div>`;
+                    btn.onclick = () => executePlayerAction('skill', i, s);
+                } else {
+                    btn.className = 'action-btn disabled';
+                    btn.innerHTML = '未裝備技能';
+                    btn.onclick = null;
+                }
             }
         }
 
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            toast.innerText = msg;
-            toast.style.opacity = 1;
-            setTimeout(() => toast.style.opacity = 0, 2500);
+        // --- Combat Engine ---
+        function updateHealthBars() {
+            // Player
+            let pPct = Math.max(0, (player.hp / player.maxHp) * 100);
+            document.getElementById('player-hp-txt').innerText = `${Math.ceil(player.hp)}/${player.maxHp}`;
+            let pFill = document.getElementById('player-hp-fill');
+            pFill.style.width = pPct + '%';
+            pFill.style.background = pPct > 30 ? 'var(--hp-green)' : 'var(--hp-red)';
+
+            // Monster
+            let mPct = Math.max(0, (monster.hp / monster.maxHp) * 100);
+            document.getElementById('monster-hp-txt').innerText = `${Math.ceil(monster.hp)}/${monster.maxHp}`;
+            let mFill = document.getElementById('monster-hp-fill');
+            mFill.style.width = mPct + '%';
         }
 
-        function switchPage(pageId, navItem) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(`page-${pageId}`).classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            navItem.classList.add('active');
+        function showFloatingText(elementId, text, color) {
+            const el = document.getElementById(elementId);
+            const rect = el.getBoundingClientRect();
+            const arena = document.querySelector('.combat-arena').getBoundingClientRect();
+            
+            const floatDiv = document.createElement('div');
+            floatDiv.className = 'floating-text';
+            floatDiv.innerText = text;
+            floatDiv.style.color = color;
+            floatDiv.style.left = (rect.left - arena.left + (rect.width/2) - 20) + 'px';
+            floatDiv.style.top = (rect.top - arena.top) + 'px';
+            
+            document.querySelector('.combat-arena').appendChild(floatDiv);
+            setTimeout(() => floatDiv.remove(), 1000);
         }
 
-        // --- Core Accounting ---
+        function triggerAnim(elId, animClass) {
+            const el = document.getElementById(elId);
+            el.classList.remove(animClass);
+            void el.offsetWidth; // trigger reflow
+            el.classList.add(animClass);
+        }
+
+        function processCooldowns() {
+            for(let i=0; i<3; i++) {
+                if(player.skillCDs[i] > 0) player.skillCDs[i]--;
+            }
+            spawnMonster(); // re-renders buttons
+        }
+
+        function executePlayerAction(type, slotIdx = -1, skillData = null) {
+            if(combatBlocked) return;
+            combatBlocked = true;
+
+            let damage = 0;
+            let heal = 0;
+
+            // Attack Animation
+            triggerAnim('sprite-player', 'anim-attack-right');
+
+            setTimeout(() => {
+                if(type === 'attack') {
+                    damage = player.atk;
+                } else if (type === 'skill') {
+                    if (skillData.type === 'attack') {
+                        damage = player.atk * skillData.mult;
+                    } else if (skillData.type === 'heal') {
+                        heal = player.maxHp * skillData.mult;
+                    }
+                    player.skillCDs[slotIdx] = skillData.cd; // Trigger CD
+                }
+
+                // Apply Money Buff!
+                if(player.hasMoneyBuff && damage > 0) {
+                    damage *= 3;
+                    player.hasMoneyBuff = false;
+                    document.getElementById('player-buff').style.display = 'none';
+                    showFloatingText('sprite-player', '鈔能力爆發!', '#ffcc00');
+                }
+
+                // Resolve effect
+                if (damage > 0) {
+                    damage = Math.floor(damage * (0.9 + Math.random()*0.2)); // 10% variance
+                    monster.hp -= damage;
+                    triggerAnim('sprite-monster', 'anim-hit');
+                    showFloatingText('sprite-monster', `-${damage}`, 'white');
+                }
+                
+                if (heal > 0) {
+                    heal = Math.floor(heal);
+                    player.hp = Math.min(player.maxHp, player.hp + heal);
+                    showFloatingText('sprite-player', `+${heal}`, '#2ecc71');
+                }
+
+                updateHealthBars();
+
+                // Check death
+                if (monster.hp <= 0) {
+                    setTimeout(monsterDefeated, 500);
+                } else {
+                    // Enemy turn
+                    setTimeout(executeEnemyTurn, 800);
+                }
+            }, 300); // Wait for anim
+        }
+
+        function executeEnemyTurn() {
+            triggerAnim('sprite-monster', 'anim-attack-left');
+            
+            setTimeout(() => {
+                let damage = Math.floor(monster.atk * (0.9 + Math.random()*0.2));
+                player.hp -= damage;
+                triggerAnim('sprite-player', 'anim-hit');
+                showFloatingText('sprite-player', `-${damage}`, '#e74c3c');
+                
+                updateHealthBars();
+                
+                if (player.hp <= 0) {
+                    setTimeout(playerDefeated, 500);
+                } else {
+                    processCooldowns();
+                    combatBlocked = false;
+                }
+            }, 300);
+        }
+
+        function monsterDefeated() {
+            let coinsEarned = 10 + Math.floor(state.stage * 1.5);
+            state.coins += coinsEarned;
+            showToast(`⚔️ 討伐成功！獲得 ${coinsEarned} 🪙`);
+            
+            // Task progression
+            const today = new Date().toISOString().split('T')[0];
+            if(state.tasks.dailyKill.lastReset !== today) {
+                state.tasks.dailyKill.lastReset = today;
+                state.tasks.dailyKill.count = 0;
+                state.tasks.dailyKill.claimed = false;
+            }
+            if(!state.tasks.dailyKill.claimed) {
+                state.tasks.dailyKill.count++;
+            }
+
+            state.stage++;
+            saveState();
+            renderTasks();
+            
+            processCooldowns();
+            setTimeout(() => {
+                spawnMonster();
+                combatBlocked = false;
+            }, 500);
+        }
+
+        function playerDefeated() {
+            showToast(`💀 勇者倒下了... 退回上一階段`);
+            if(state.stage > 1) state.stage--;
+            player.hp = player.maxHp; // Revive full
+            player.skillCDs = [0,0,0];
+            saveState();
+            
+            setTimeout(() => {
+                spawnMonster();
+                combatBlocked = false;
+            }, 1000);
+        }
+
+        // --- Accounting System ---
+        let currentAmount = "0";
+        let currentCat = "🍖";
+
+        function openAccountingModal() {
+            document.getElementById('accounting-modal').style.display = 'flex';
+            currentAmount = "0";
+            document.getElementById('amount-input').innerText = currentAmount;
+        }
+        function closeAccountingModal() {
+            document.getElementById('accounting-modal').style.display = 'none';
+        }
+
         function selectCat(btn, cat) {
             document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
@@ -920,12 +667,22 @@
             } else if (val === 'Enter') {
                 let amt = parseInt(currentAmount, 10);
                 if (amt <= 0 || isNaN(amt)) {
-                    showToast('請輸入大於 0 的金額！');
+                    showToast('金額必須大於 0');
                     return;
                 }
                 
-                processAccounting(amt);
-                currentAmount = "0";
+                // Rewards!
+                state.coins += 100; // Large reward
+                player.hasMoneyBuff = true;
+                player.hp = Math.min(player.maxHp, player.hp + Math.floor(player.maxHp * 0.5)); // Heal 50%
+                updateHealthBars();
+                
+                document.getElementById('player-buff').style.display = 'block';
+                showToast(`✨ 記帳完成！獲得 100 🪙 與【鈔能力】！`);
+                
+                checkTimeLimitedTask();
+                saveState();
+                closeAccountingModal();
             } else {
                 if (currentAmount === "0") currentAmount = val;
                 else if (currentAmount.length < 7) currentAmount += val;
@@ -933,242 +690,312 @@
             document.getElementById('amount-input').innerText = currentAmount;
         }
 
-        function processAccounting(amt) {
-            // Check Daily tasks
-            checkDailyReset();
-            state.entriesToday++;
-            
-            let t2 = state.tasks.find(t=>t.id===2);
-            if(t2 && !t2.completed && state.entriesToday >= 3) {
-                t2.completed = true;
-                showToast('📜 達成任務：勤勉記帳！');
+        // --- Tasks (Strict Economy) ---
+        function checkDailyResets() {
+            const today = new Date().toISOString().split('T')[0];
+            if(state.tasks.dailyKill.lastReset !== today) {
+                state.tasks.dailyKill.lastReset = today;
+                state.tasks.dailyKill.count = 0;
+                state.tasks.dailyKill.claimed = false;
+                renderTasks();
             }
-
-            // Calculate Base + Bonus Rewards
-            let baseReward = 50;
-            let eqItem = GACHA_POOL.find(i => i.id === state.equippedId);
-            let multiplier = eqItem ? (1 + eqItem.bonus) : 1;
-            let finalReward = Math.floor(baseReward * multiplier);
-            
-            state.coins += finalReward;
-            state.exp += 10;
-            
-            // Add to history
-            const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            state.history.unshift({ cat: currentCat, amt: amt, time: timeStr, reward: finalReward });
-            if(state.history.length > 10) state.history.pop(); // Keep last 10
-
-            saveState();
-            renderHistory();
-            renderTasks();
-            triggerRandomEvent();
         }
 
-        // --- Exploration Event System ---
-        function triggerRandomEvent() {
-            const logContainer = document.getElementById('adventure-log');
+        function checkTimeLimitedTask() {
+            // Secret Condition: Account between 14:00 and 16:00
+            const h = new Date().getHours();
+            const today = new Date().toISOString().split('T')[0];
             
-            // Remove old entries if too many
-            if(logContainer.children.length > 3) {
-                logContainer.removeChild(logContainer.firstChild);
-            }
-
-            // Pick random event
-            const ev = EVENTS[Math.floor(Math.random() * EVENTS.length)];
-            
-            // Apply event rewards
-            if(ev.coins) state.coins += ev.coins;
-            if(ev.exp) state.exp += ev.exp;
-            
-            // Create log element
-            const entry = document.createElement('div');
-            entry.className = 'log-entry';
-            if(ev.type === 'Good' || ev.type === 'Epic') entry.classList.add('log-epic');
-            
-            entry.innerText = `[推進] ${ev.text}`;
-            logContainer.appendChild(entry);
-            
-            saveState(); // save any extra rewards
-        }
-
-        function renderHistory() {
-            const list = document.getElementById('history-list');
-            list.innerHTML = '';
-            if(state.history.length === 0) {
-                list.innerHTML = '<div style="text-align:center; color:var(--text-dim); font-size:12px;">尚無冒險紀錄</div>';
-                return;
-            }
-            state.history.forEach(h => {
-                const item = document.createElement('div');
-                item.className = 'history-item glass-panel';
-                item.innerHTML = `
-                    <span>${h.cat} 消耗 $${h.amt} <span style="font-size:10px; color:var(--text-dim);">(${h.time})</span></span>
-                    <span style="color:var(--text-gold);">+${h.reward} 🪙</span>
-                `;
-                list.appendChild(item);
-            });
-        }
-
-        // --- Tasks System (💎 Rewards) ---
-        function renderTasks() {
-            const list = document.getElementById('task-list');
-            list.innerHTML = '';
-            state.tasks.forEach(t => {
-                const card = document.createElement('div');
-                card.className = 'task-card glass-panel';
+            if(h >= 14 && h < 16) {
+                if(state.tasks.timeLimit.lastReset !== today) {
+                    state.tasks.timeLimit.claimed = false;
+                }
                 
-                let btnHTML = '';
-                if (t.claimed) btnHTML = `<button class="btn-claim" disabled>已領取</button>`;
-                else if (t.completed) btnHTML = `<button class="btn-claim" onclick="claimTask(${t.id})">領取</button>`;
-                else btnHTML = `<span style="color:var(--text-dim); font-size:12px;">進行中</span>`;
-
-                card.innerHTML = `
-                    <div>
-                        <h3 style="font-size:16px;">${t.title}</h3>
-                        <p style="font-size:12px; color:var(--text-dim);">${t.desc}</p>
-                        <div class="task-reward">🎁 ${t.rewardGems} 💎</div>
-                    </div>
-                    <div>${btnHTML}</div>
-                `;
-                list.appendChild(card);
-            });
+                if(!state.tasks.timeLimit.claimed) {
+                    state.tasks.timeLimit.claimed = true;
+                    state.tasks.timeLimit.lastReset = today;
+                    state.gems += 50; // Rare Premium Currency
+                    showToast(`💎 觸發限時神蹟！獲得 50 鑽石！`);
+                    saveState();
+                    renderTasks();
+                }
+            }
         }
 
-        function claimTask(id) {
-            let task = state.tasks.find(t => t.id === id);
-            if(task && task.completed && !task.claimed) {
-                task.claimed = true;
-                state.gems += task.rewardGems; // Add Gems!
-                showToast(`🎉 獲得 ${task.rewardGems} 💎 兌換點數！`);
+        function renderTasks() {
+            const container = document.getElementById('tasks-list-container');
+            container.innerHTML = '';
+            
+            // Daily Kill
+            const dk = state.tasks.dailyKill;
+            const isDkDone = dk.count >= dk.target;
+            container.innerHTML += `
+                <div class="card">
+                    <div>
+                        <span class="task-tag">日常任務</span>
+                        <h4>魔物清剿者</h4>
+                        <p style="font-size:12px;color:var(--text-dim);">擊敗 ${dk.target} 隻怪物 (${dk.count}/${dk.target})</p>
+                        <p style="font-size:12px;color:#f1c40f;">獎勵: 200 🪙</p>
+                    </div>
+                    <button class="card-btn btn-claim" ${dk.claimed ? 'disabled' : (isDkDone ? '' : 'disabled')} onclick="claimDaily()">
+                        ${dk.claimed ? '已領取' : '領取'}
+                    </button>
+                </div>
+            `;
+
+            // Time Limited Hint
+            const tl = state.tasks.timeLimit;
+            const today = new Date().toISOString().split('T')[0];
+            const tlClaimedToday = (tl.lastReset === today && tl.claimed);
+            
+            container.innerHTML += `
+                <div class="card" style="border-color:#3498db;">
+                    <div>
+                        <span class="task-tag time">限時機密任務</span>
+                        <h4>午後的悠閒</h4>
+                        <p style="font-size:12px;color:var(--text-dim);">在 14:00 ~ 15:59 之間記錄一筆花費</p>
+                        <p style="font-size:12px;color:#e74c3c;">極稀有獎勵: 50 💎</p>
+                    </div>
+                    <button class="card-btn btn-claim" disabled style="background:${tlClaimedToday ? '#555' : '#333'}">
+                        ${tlClaimedToday ? '今日已達成' : '隱藏條件'}
+                    </button>
+                </div>
+            `;
+        }
+
+        function claimDaily() {
+            if(state.tasks.dailyKill.count >= state.tasks.dailyKill.target && !state.tasks.dailyKill.claimed) {
+                state.tasks.dailyKill.claimed = true;
+                state.coins += 200;
+                showToast(`🎉 領取成功！獲得 200 🪙`);
                 saveState();
                 renderTasks();
             }
         }
 
-        // --- Gacha / Market ---
-        function drawGacha() {
-            if(state.coins < 200) {
-                showToast("🪙 遊戲幣不足！需要 200 🪙");
+        // --- Gacha System ---
+        function drawGacha(type) {
+            const cost = type === 'equip' ? 300 : 500;
+            if(state.coins < cost) {
+                showToast(`🪙 餘額不足！需要 ${cost} 遊戲幣`);
                 return;
             }
-            state.coins -= 200;
-            
-            // Simple random draw
-            const item = GACHA_POOL[Math.floor(Math.random() * GACHA_POOL.length)];
-            state.inventory.push(item.id);
+            state.coins -= cost;
+
+            if(type === 'equip') {
+                const item = EQUIP_DB[Math.floor(Math.random() * EQUIP_DB.length)];
+                state.inventory.equips.push(item.id);
+                showToast(`🛡️ 獲得裝備：【${item.name}】！`);
+            } else {
+                const item = SKILL_DB[Math.floor(Math.random() * SKILL_DB.length)];
+                if(!state.inventory.skills.includes(item.id)) {
+                    state.inventory.skills.push(item.id);
+                    showToast(`📜 習得技能：【${item.name}】！`);
+                } else {
+                    // Duplicate skill -> refund partial coins
+                    state.coins += 200;
+                    showToast(`📜 技能重複，轉換為 200 🪙`);
+                }
+            }
             saveState();
-            
-            showToast(`🔮 法陣光芒閃爍... 獲得了【${item.name}】！`);
-            renderInventory();
+            renderRolePage(); // update views if needed
         }
 
-        // --- Inventory ---
-        function renderInventory() {
-            const list = document.getElementById('inventory-list');
-            list.innerHTML = '';
-            if(state.inventory.length === 0) {
-                list.innerHTML = '<div style="grid-column: span 2; text-align:center; color:var(--text-dim); font-size:12px;">行囊空空如也</div>';
-                return;
+        // --- Role Page & Selection Modal ---
+        function renderRolePage() {
+            // Update equip slots
+            ['weapon', 'helmet', 'armor', 'gloves', 'boots'].forEach(type => {
+                const slot = document.getElementById(`slot-${type}`);
+                const eqId = state.equipped[type];
+                if(eqId) {
+                    const item = EQUIP_DB.find(i => i.id === eqId);
+                    slot.innerHTML = `<span class="slot-label">${getTypeName(type)}</span>${item.icon}`;
+                    slot.classList.add('filled');
+                } else {
+                    slot.innerHTML = `<span class="slot-label">${getTypeName(type)}</span>❓`;
+                    slot.classList.remove('filled');
+                }
+            });
+
+            // Update skill slots
+            for(let i=0; i<3; i++) {
+                const slot = document.getElementById(`slot-skill-${i}`);
+                const skId = state.skillSlots[i];
+                if(skId) {
+                    const skill = SKILL_DB.find(s => s.id === skId);
+                    slot.innerHTML = `${skill.icon}<br><span style="font-size:10px;">${skill.name}</span>`;
+                    slot.classList.add('filled');
+                } else {
+                    slot.innerHTML = `❓<br><span style="font-size:10px;">槽位 ${i+1}</span>`;
+                    slot.classList.remove('filled');
+                }
             }
-            
-            // Deduplicate for display, count quantities
-            let counts = {};
-            state.inventory.forEach(id => counts[id] = (counts[id]||0) + 1);
-            
-            for(let idStr in counts) {
-                let id = parseInt(idStr);
-                let item = GACHA_POOL.find(i => i.id === id);
-                let isEquipped = (state.equippedId === id);
+        }
+
+        function getTypeName(type) {
+            const m = {weapon:'武器', helmet:'頭盔', armor:'胸甲', gloves:'手套', boots:'鞋子'};
+            return m[type];
+        }
+
+        let currentSelectCtx = null; // { mode: 'equip'|'skill', slot: type|idx }
+
+        function openSelectionModal(mode, slot) {
+            currentSelectCtx = { mode, slot };
+            const modal = document.getElementById('selection-modal');
+            const list = document.getElementById('sel-list');
+            list.innerHTML = '';
+
+            if (mode === 'equip') {
+                document.getElementById('sel-title').innerText = `選擇 ${getTypeName(slot)}`;
+                // Filter inventory for this type
+                const available = state.inventory.equips.filter(id => EQUIP_DB.find(e => e.id===id).type === slot);
+                // Deduplicate for display
+                let unique = [...new Set(available)];
                 
-                let div = document.createElement('div');
-                div.className = `inv-item glass-panel ${isEquipped ? 'equipped' : ''}`;
-                div.innerHTML = `
-                    <div style="font-size:30px;">${item.icon}</div>
-                    <div style="font-size:14px; font-weight:bold; margin-top:5px;">${item.name}</div>
-                    <div style="font-size:12px; color:var(--text-gold);">加成: +${item.bonus*100}%</div>
-                    <div style="font-size:10px; color:var(--text-dim);">數量: ${counts[idStr]}</div>
-                    ${!isEquipped ? `<button class="inv-btn" onclick="equip(${item.id})">裝備</button>` : `<div style="font-size:12px; margin-top:10px; color:var(--text-gold);">已裝備</div>`}
-                `;
-                list.appendChild(div);
+                // Add "Unequip" option
+                if(state.equipped[slot] !== null) {
+                    list.innerHTML += `<div class="sel-item" onclick="selectItem(null)">
+                        <div class="sel-icon">❌</div>
+                        <div class="sel-details"><div class="sel-name">卸下裝備</div></div>
+                    </div>`;
+                }
+
+                if(unique.length === 0) {
+                    list.innerHTML += `<div style="text-align:center;color:#888;padding:20px;">行囊中沒有此部位裝備</div>`;
+                } else {
+                    unique.forEach(id => {
+                        const item = EQUIP_DB.find(e => e.id === id);
+                        list.innerHTML += `<div class="sel-item" onclick="selectItem('${id}')">
+                            <div class="sel-icon">${item.icon}</div>
+                            <div class="sel-details">
+                                <div class="sel-name">${item.name} <span style="font-size:10px;color:#aaa;">(${item.rarity})</span></div>
+                                <div class="sel-stats">ATK +${item.atk} / HP +${item.hp}</div>
+                            </div>
+                        </div>`;
+                    });
+                }
+            } else { // Skill
+                document.getElementById('sel-title').innerText = `選擇 技能`;
+                if(state.skillSlots[slot] !== null) {
+                    list.innerHTML += `<div class="sel-item" onclick="selectItem(null)">
+                        <div class="sel-icon">❌</div>
+                        <div class="sel-details"><div class="sel-name">卸下技能</div></div>
+                    </div>`;
+                }
+                
+                if(state.inventory.skills.length === 0) {
+                    list.innerHTML += `<div style="text-align:center;color:#888;padding:20px;">尚未習得任何技能</div>`;
+                } else {
+                    state.inventory.skills.forEach(id => {
+                        const skill = SKILL_DB.find(s => s.id === id);
+                        // Disable if already equipped in ANOTHER slot
+                        let isEquipped = state.skillSlots.includes(id) && state.skillSlots[slot] !== id;
+                        
+                        list.innerHTML += `<div class="sel-item" ${isEquipped?'style="opacity:0.5;"':`onclick="selectItem('${id}')"`}>
+                            <div class="sel-icon">${skill.icon}</div>
+                            <div class="sel-details">
+                                <div class="sel-name">${skill.name} ${isEquipped?'(已在其他槽位)':''}</div>
+                                <div class="sel-stats">${skill.desc} | CD: ${skill.cd}</div>
+                            </div>
+                        </div>`;
+                    });
+                }
             }
-        }
-        
-        function equip(id) {
-            state.equippedId = id;
-            saveState();
-            renderInventory();
-            showToast("🗡️ 裝備已更換！");
+            modal.style.display = 'flex';
         }
 
-        // --- Temple / Offers ---
+        function selectItem(id) {
+            if(currentSelectCtx.mode === 'equip') {
+                state.equipped[currentSelectCtx.slot] = id;
+                recalculatePlayerStats();
+            } else {
+                state.skillSlots[currentSelectCtx.slot] = id;
+                spawnMonster(); // re-render combat buttons
+            }
+            saveState();
+            renderRolePage();
+            document.getElementById('selection-modal').style.display = 'none';
+        }
+
+        // --- Temple (Offers) ---
+        const OFFERS = [
+            { id: 1, title: '初級回復藥水 (實體糖果)', cost: 10, icon: '🍬' },
+            { id: 2, title: '50嵐 9折券', cost: 100, icon: '🧋' },
+            { id: 3, title: '麥當勞 買一送一', cost: 300, icon: '🍔' }
+        ];
+
         function renderOffers() {
-            const list = document.getElementById('offer-list');
+            const list = document.getElementById('offers-list');
             list.innerHTML = '';
-            state.offers.forEach(o => {
-                const card = document.createElement('div');
-                card.className = 'offer-card glass-panel';
-                card.innerHTML = `
-                    <div style="font-size:40px; background:rgba(0,0,0,0.5); border-radius:10px; padding:5px;">${o.icon}</div>
-                    <div style="flex:1;">
-                        <h3 style="font-size:16px;">${o.title}</h3>
-                        <p style="font-size:12px; color:#e74c3c; margin-top:4px;">💰 ${o.cost} 💎</p>
+            OFFERS.forEach(o => {
+                list.innerHTML += `
+                    <div class="card">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div style="font-size:30px;">${o.icon}</div>
+                            <div>
+                                <h4 style="color:var(--text-gold);">${o.title}</h4>
+                                <p style="font-size:12px; color:var(--text-dim);">消耗: <span style="color:#e74c3c;font-weight:bold;">${o.cost} 💎</span></p>
+                            </div>
+                        </div>
+                        <button class="card-btn btn-redeem" onclick="redeemOffer(${o.id}, ${o.cost})">兌換</button>
                     </div>
-                    <button class="btn-redeem" onclick="redeemCoupon(${o.id})">獻祭</button>
                 `;
-                list.appendChild(card);
             });
         }
 
-        function redeemCoupon(id) {
-            let offer = state.offers.find(o => o.id === id);
-            if(state.gems >= offer.cost) {
-                state.gems -= offer.cost; // Deduct GEMS
-                saveState();
-                openModal(offer);
-            } else {
-                showToast(`💎 兌換點數不足！需要 ${offer.cost} 💎`);
+        let qrInterval = null;
+        function redeemOffer(id, cost) {
+            if(state.gems < cost) {
+                showToast(`💎 鑽石不足！`);
+                return;
             }
-        }
-
-        // Modal
-        function openModal(offer) {
-            document.getElementById('modal-coupon-title').innerText = offer.title;
-            const modal = document.getElementById('coupon-modal');
-            modal.style.display = 'flex';
+            state.gems -= cost;
+            saveState();
             
-            const qrContainer = document.getElementById('qrcode');
-            qrContainer.innerHTML = '<img src="qrcode_image.jpg" alt="QR" style="width:150px; border-radius:8px; object-fit:cover;">';
-
+            // Open QR Modal
+            document.getElementById('qr-modal').style.display = 'flex';
+            document.getElementById('qrcode').innerHTML = '<img src="qrcode_image.jpg" width="150" alt="QR">';
+            
             let timeleft = 180;
-            updateTimerDisplay(timeleft);
+            document.getElementById('qr-timer').innerText = `03:00`;
+            if(qrInterval) clearInterval(qrInterval);
             
-            if(timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
+            qrInterval = setInterval(() => {
                 timeleft--;
                 if(timeleft <= 0) {
-                    clearInterval(timerInterval);
-                    closeModal();
-                    showToast('⚠️ 恩賜已消散！');
-                } else updateTimerDisplay(timeleft);
+                    clearInterval(qrInterval);
+                    document.getElementById('qr-modal').style.display = 'none';
+                    showToast("⏳ 兌換憑證已失效");
+                } else {
+                    let m = Math.floor(timeleft/60).toString().padStart(2,'0');
+                    let s = (timeleft%60).toString().padStart(2,'0');
+                    document.getElementById('qr-timer').innerText = `${m}:${s}`;
+                }
             }, 1000);
         }
 
-        function updateTimerDisplay(secs) {
-            let m = Math.floor(secs / 60).toString().padStart(2, '0');
-            let s = (secs % 60).toString().padStart(2, '0');
-            document.getElementById('modal-timer').innerText = `${m}:${s}`;
+        // --- Core UI ---
+        function updateUI() {
+            document.getElementById('coin-val').innerText = state.coins;
+            document.getElementById('gem-val').innerText = state.gems;
         }
 
-        function closeModal() {
-            document.getElementById('coupon-modal').style.display = 'none';
-            if(timerInterval) clearInterval(timerInterval);
-            renderOffers();
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.opacity = 1;
+            setTimeout(() => t.style.opacity = 0, 2000);
         }
 
-        // Handle Enter key in login
-        document.getElementById('username-input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') login();
-        });
+        function switchPage(pageId, navItem) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(`page-${pageId}`).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            navItem.classList.add('active');
+        }
+
+        // Boot
+        window.onload = init;
 
     </script>
 </body>
