@@ -395,20 +395,56 @@
     <script>
         // --- Data Bases ---
         const EQUIP_DB = [
+            // Weapons
             { id: 'w1', type: 'weapon', name: '鐵劍', icon: '🗡️', atk: 15, hp: 0, rarity: 'normal' },
             { id: 'w2', type: 'weapon', name: '破壞劍', icon: '⚔️', atk: 50, hp: 0, rarity: 'epic' },
+            { id: 'w3', type: 'weapon', name: '木棍', icon: '🏏', atk: 5, hp: 0, rarity: 'normal' },
+            { id: 'w4', type: 'weapon', name: '精鋼長槍', icon: '🔱', atk: 25, hp: 10, rarity: 'rare' },
+            { id: 'w5', type: 'weapon', name: '暗影匕首', icon: '🔪', atk: 40, hp: -20, rarity: 'epic' },
+            { id: 'w6', type: 'weapon', name: '王者之劍', icon: '💫', atk: 120, hp: 100, rarity: 'legendary' },
+            { id: 'w7', type: 'weapon', name: '星辰法杖', icon: '🪄', atk: 85, hp: 50, rarity: 'epic' },
+
+            // Helmets
             { id: 'h1', type: 'helmet', name: '皮帽', icon: '🪖', atk: 2, hp: 30, rarity: 'normal' },
             { id: 'h2', type: 'helmet', name: '皇家金盔', icon: '👑', atk: 10, hp: 100, rarity: 'epic' },
+            { id: 'h3', type: 'helmet', name: '草帽', icon: '👒', atk: 0, hp: 15, rarity: 'normal' },
+            { id: 'h4', type: 'helmet', name: '戰術護目鏡', icon: '🥽', atk: 15, hp: 20, rarity: 'rare' },
+            { id: 'h5', type: 'helmet', name: '深淵魔角', icon: '👿', atk: 30, hp: -50, rarity: 'epic' },
+            { id: 'h6', type: 'helmet', name: '神聖光環', icon: '👼', atk: 20, hp: 300, rarity: 'legendary' },
+
+            // Armors
             { id: 'a1', type: 'armor', name: '布衣', icon: '👕', atk: 0, hp: 50, rarity: 'normal' },
             { id: 'a2', type: 'armor', name: '聖騎士鎧甲', icon: '🛡️', atk: 5, hp: 200, rarity: 'legendary' },
+            { id: 'a3', type: 'armor', name: '破舊斗篷', icon: '🧥', atk: 1, hp: 20, rarity: 'normal' },
+            { id: 'a4', type: 'armor', name: '忍者服', icon: '🥷', atk: 20, hp: 40, rarity: 'rare' },
+            { id: 'a5', type: 'armor', name: '熔岩胸甲', icon: '🌋', atk: 15, hp: 150, rarity: 'epic' },
+            { id: 'a6', type: 'armor', name: '星空長袍', icon: '🌌', atk: 50, hp: 400, rarity: 'legendary' },
+
+            // Gloves
             { id: 'g1', type: 'gloves', name: '棉手套', icon: '🧤', atk: 3, hp: 10, rarity: 'normal' },
-            { id: 'b1', type: 'boots', name: '皮靴', icon: '🥾', atk: 5, hp: 20, rarity: 'normal' }
+            { id: 'g2', type: 'gloves', name: '拳擊手套', icon: '🥊', atk: 12, hp: 15, rarity: 'rare' },
+            { id: 'g3', type: 'gloves', name: '龍鱗護手', icon: '🐉', atk: 25, hp: 80, rarity: 'epic' },
+            { id: 'g4', type: 'gloves', name: '泰坦之力', icon: '💪', atk: 60, hp: 120, rarity: 'legendary' },
+            { id: 'g5', type: 'gloves', name: '盜賊護腕', icon: '🪙', atk: 8, hp: 5, rarity: 'normal' },
+
+            // Boots
+            { id: 'b1', type: 'boots', name: '皮靴', icon: '🥾', atk: 5, hp: 20, rarity: 'normal' },
+            { id: 'b2', type: 'boots', name: '運動鞋', icon: '👟', atk: 2, hp: 35, rarity: 'rare' },
+            { id: 'b3', type: 'boots', name: '溜冰鞋', icon: '⛸️', atk: 15, hp: -10, rarity: 'rare' },
+            { id: 'b4', type: 'boots', name: '風暴之靴', icon: '🌪️', atk: 30, hp: 60, rarity: 'epic' },
+            { id: 'b5', type: 'boots', name: '赫爾墨斯飛鞋', icon: '🪽', atk: 45, hp: 150, rarity: 'legendary' }
         ];
 
         const SKILL_DB = [
             { id: 's1', name: '重擊', icon: '🔨', type: 'attack', mult: 1.5, cd: 2, desc: '造成 150% 攻擊力傷害' },
             { id: 's2', name: '治癒術', icon: '✨', type: 'heal', mult: 0.3, cd: 4, desc: '回復最大生命值 30%' },
-            { id: 's3', name: '大火球', icon: '🔥', type: 'attack', mult: 2.5, cd: 4, desc: '造成 250% 攻擊力傷害' }
+            { id: 's3', name: '大火球', icon: '🔥', type: 'attack', mult: 2.5, cd: 4, desc: '造成 250% 攻擊力傷害' },
+            { id: 's4', name: '雙連斬', icon: '⚔️', type: 'attack', mult: 1.8, cd: 3, desc: '快速斬擊，造成 180% 傷害' },
+            { id: 's5', name: '神聖祈禱', icon: '🙏', type: 'heal', mult: 0.6, cd: 6, desc: '虔誠祈禱，回復最大生命值 60%' },
+            { id: 's6', name: '雷霆萬鈞', icon: '⚡', type: 'attack', mult: 3.5, cd: 6, desc: '召喚天雷，造成 350% 毀滅傷害' },
+            { id: 's7', name: '吸血打擊', icon: '🧛', type: 'attack_heal', mult: 1.2, cd: 4, desc: '造成 120% 傷害，並回復 50% 傷害血量' },
+            { id: 's8', name: '毒液噴射', icon: '🐍', type: 'attack', mult: 1.3, cd: 2, desc: '快速噴射毒液，造成 130% 傷害' },
+            { id: 's9', name: '隕石術', icon: '☄️', type: 'attack', mult: 5.0, cd: 10, desc: '終極魔法，造成 500% 致命傷害' }
         ];
 
         const MONSTERS = [
@@ -441,6 +477,12 @@
         if(!state.profile) state.profile = { name: '勇者', avatar: '🧙‍♂️', password: null };
         if(!state.history) state.history = [];
         if(!state.accountingDaily) state.accountingDaily = { count: 0, lastReset: null };
+        
+        // Give 1000 gems testing bonus
+        if(!state.testGemsGiven) {
+            state.gems += 1000;
+            state.testGemsGiven = true;
+        }
 
         // Player Combat State
         let player = { hp: 0, maxHp: 100, atk: 10, skillCDs: [0, 0, 0], hasMoneyBuff: false };
@@ -634,6 +676,10 @@
                 else if (type === 'skill') {
                     if (skillData.type === 'attack') damage = player.atk * skillData.mult;
                     else if (skillData.type === 'heal') heal = player.maxHp * skillData.mult;
+                    else if (skillData.type === 'attack_heal') {
+                        damage = player.atk * skillData.mult;
+                        heal = damage * 0.5;
+                    }
                     player.skillCDs[slotIdx] = skillData.cd; 
                 }
 
