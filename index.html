@@ -431,7 +431,8 @@
                 timeLimit: { claimed: false, lastReset: null }
             },
             profile: { name: '勇者', avatar: '🧙‍♂️', password: null },
-            history: [] // { id, cat, amount, date }
+            history: [], // { id, cat, amount, date }
+            accountingDaily: { count: 0, lastReset: null }
         };
 
         let state = JSON.parse(localStorage.getItem('rpg_v2_state')) || JSON.parse(JSON.stringify(DEFAULT_STATE));
@@ -439,6 +440,7 @@
         // Data Migration for older versions
         if(!state.profile) state.profile = { name: '勇者', avatar: '🧙‍♂️', password: null };
         if(!state.history) state.history = [];
+        if(!state.accountingDaily) state.accountingDaily = { count: 0, lastReset: null };
 
         // Player Combat State
         let player = { hp: 0, maxHp: 100, atk: 10, skillCDs: [0, 0, 0], hasMoneyBuff: false };
@@ -777,8 +779,10 @@
                 });
                 if(state.history.length > 50) state.history.pop(); // Keep last 50
 
-                // Rewards!
-                let coinReward = Math.floor(Math.sqrt(amt));
+                // Rewards! Non-linear decay per daily usage
+                let coinReward = Math.floor(100 / Math.pow(1.5, state.accountingDaily.count));
+                state.accountingDaily.count++;
+
                 state.coins += coinReward; 
                 player.hasMoneyBuff = true;
                 player.hp = Math.min(player.maxHp, player.hp + Math.floor(player.maxHp * 0.5)); 
@@ -863,6 +867,10 @@
                 state.tasks.dailyKill.count = 0;
                 state.tasks.dailyKill.claimed = false;
                 renderTasks();
+            }
+            if(state.accountingDaily.lastReset !== today) {
+                state.accountingDaily.lastReset = today;
+                state.accountingDaily.count = 0;
             }
         }
 
@@ -1103,7 +1111,12 @@
             saveState();
             
             document.getElementById('qr-modal').style.display = 'flex';
-            document.getElementById('qrcode').innerHTML = '<img src="qrcode_image.jpg" width="150" alt="QR">';
+            document.getElementById('qrcode').innerHTML = '';
+            new QRCode(document.getElementById('qrcode'), {
+                text: "https://raw.githubusercontent.com/a0983193148-spec/wealth-origin/main/qrcode_image.jpg",
+                width: 150,
+                height: 150
+            });
             
             let timeleft = 180;
             document.getElementById('qr-timer').innerText = `03:00`;
