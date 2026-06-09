@@ -662,8 +662,10 @@
         let state = JSON.parse(localStorage.getItem('rpg_v2_state')) || JSON.parse(JSON.stringify(DEFAULT_STATE));
         
         // Data Migration for older versions
-        if(!state.profile) state.profile = { name: '勇者', avatar: '🧙‍♂️', password: null };
-        if(state.profile.avatar.includes('<img')) state.profile.avatar = '🧙‍♂️'; // Revert back to emoji for profile, since battle sprite is hardcoded
+        if(!state.profile) state.profile = { name: '勇者', avatar: '<img src="./assets/player.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%;transform:scale(1.2);">', password: null };
+        if(state.profile.avatar === '🧙‍♂️' || state.profile.avatar.includes('🧙‍♂️')) {
+            state.profile.avatar = '<img src="./assets/player.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%;transform:scale(1.2);">';
+        }
         if(!state.history) state.history = [];
         if(!state.accountingDaily) state.accountingDaily = { count: 0, lastReset: null };
         if(!state.accountingStreak) state.accountingStreak = { days: 0, lastDate: null };
@@ -1377,7 +1379,7 @@
             document.getElementById('profile-avatar-display').innerHTML = state.profile.avatar;
             document.getElementById('top-avatar-display').innerHTML = state.profile.avatar;
             document.getElementById('player-name').innerText = state.profile.name;
-            document.getElementById('sprite-player').innerHTML = '<img src="./assets/player.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%;transform:scale(1.5);">';
+            document.getElementById('sprite-player').innerHTML = state.profile.avatar; // Sync battle sprite with avatar
         }
 
         function openProfileEdit() {
@@ -1385,10 +1387,14 @@
             if(newName !== null && newName.trim() !== "") {
                 state.profile.name = newName.trim();
             }
-            let defaultAvatarPrompt = state.profile.avatar.includes('<img') ? '🧙‍♂️' : state.profile.avatar;
-            let newAvatar = prompt("請輸入一個 Emoji 作為你的頭像：", defaultAvatarPrompt);
+            let defaultAvatarPrompt = state.profile.avatar.includes('<img') ? '傑哥' : state.profile.avatar;
+            let newAvatar = prompt("請輸入你的頭像 (輸入 '傑哥' 來恢復傑哥，或輸入任何 Emoji)：", defaultAvatarPrompt);
             if(newAvatar !== null && newAvatar.trim() !== "") {
-                state.profile.avatar = newAvatar.trim();
+                if (newAvatar.trim() === '傑哥') {
+                    state.profile.avatar = '<img src="./assets/player.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%;transform:scale(1.5);">';
+                } else {
+                    state.profile.avatar = newAvatar.trim();
+                }
             }
             saveState();
             updateProfileUI();
