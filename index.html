@@ -152,50 +152,69 @@
         .gacha-banner button { margin-top: 15px; padding: 10px 20px; background: linear-gradient(to right, #8e44ad, #9b59b6); border: none; color: white; font-weight: bold; border-radius: 20px; cursor: pointer; width: 100%; box-shadow: 0 0 10px rgba(142, 68, 173, 0.5); }
 
         /* --- Gacha Animation --- */
-        .gacha-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #1a1a2e, #000); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; }
-        .meteor-container { position: absolute; width: 100%; height: 100%; overflow: hidden; }
-        .meteor { position: absolute; top: -30%; left: 120%; width: 15px; height: 250px; background: linear-gradient(to bottom, transparent, #fff); border-radius: 50%; transform: rotate(-45deg); opacity: 0; }
-        .meteor.animate { animation: fallGenshin 1.2s cubic-bezier(0.25, 0.1, 0.25, 1) forwards; }
-        
-        .meteor.epic { background: linear-gradient(to bottom, transparent 0%, rgba(155,89,182,0.3) 50%, #e056fd 100%); filter: drop-shadow(0 0 30px #e056fd) drop-shadow(0 0 80px #8e44ad); }
-        .meteor.legendary { background: linear-gradient(to bottom, transparent 0%, rgba(241,196,15,0.3) 50%, #f1c40f 100%); filter: drop-shadow(0 0 30px #f1c40f) drop-shadow(0 0 80px #f39c12); }
-        .meteor.rare { background: linear-gradient(to bottom, transparent 0%, rgba(52,152,219,0.3) 50%, #3498db 100%); filter: drop-shadow(0 0 30px #3498db) drop-shadow(0 0 80px #2980b9); }
-        .meteor.normal { background: linear-gradient(to bottom, transparent 0%, rgba(189,195,199,0.3) 50%, #bdc3c7 100%); filter: drop-shadow(0 0 30px #bdc3c7); }
-        
-        @keyframes fallGenshin {
-            0% { top: -30%; left: 120%; opacity: 0; transform: scale(1) rotate(-45deg); }
-            10% { opacity: 1; transform: scale(1.5) rotate(-45deg); }
-            60% { top: 50%; left: 50%; opacity: 1; transform: scale(5) rotate(-45deg); }
-            100% { top: 50%; left: 50%; opacity: 0; transform: scale(20) rotate(-45deg); }
+        .gacha-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #1a1a2e, #000); z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; perspective: 1000px;}
+        .gacha-overlay.shake { animation: screenShake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes screenShake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+
+        /* Summoning Circle */
+        .magic-circle { position: absolute; width: 300px; height: 300px; border: 4px dashed currentColor; border-radius: 50%; box-shadow: 0 0 50px currentColor, inset 0 0 50px currentColor; opacity: 0; pointer-events: none; }
+        .magic-circle::before, .magic-circle::after { content: ''; position: absolute; border: 2px solid currentColor; border-radius: 50%; }
+        .magic-circle::before { top: 10%; left: 10%; right: 10%; bottom: 10%; animation: spinCircle 3s linear infinite reverse; }
+        .magic-circle::after { border-style: dotted; top: 20%; left: 20%; right: 20%; bottom: 20%; animation: spinCircle 6s linear infinite; }
+        @keyframes spinCircle { 100% { transform: rotate(360deg); } }
+        .magic-circle.animate { animation: summonPhase 2s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards, spinCircle 4s linear infinite; }
+        @keyframes summonPhase {
+            0% { transform: scale(0) rotateX(60deg); opacity: 0; }
+            30% { transform: scale(1) rotateX(60deg); opacity: 1; }
+            70% { transform: scale(1.2) rotateX(60deg); opacity: 1; filter: brightness(1); }
+            100% { transform: scale(0.1) rotateX(0deg); opacity: 0; filter: brightness(3); }
         }
 
-        .gacha-flash { position: absolute; top: 50%; left: 50%; width: 200vw; height: 200vh; background: radial-gradient(circle, #fff 10%, transparent 70%); opacity: 0; pointer-events: none; mix-blend-mode: screen; transform: translate(-50%, -50%) scale(0); }
-        .gacha-flash.animate { animation: flashGenshin 1.5s ease-out forwards; }
-        @keyframes flashGenshin {
+        /* Particles */
+        .particle { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 10px currentColor; pointer-events: none; animation: flyIn 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+        @keyframes flyIn {
+            0% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translate(0, 0) scale(1.5); opacity: 0; }
+        }
+
+        .gacha-flash { position: absolute; top: 50%; left: 50%; width: 200vw; height: 200vh; background: radial-gradient(circle, #fff 20%, transparent 70%); opacity: 0; pointer-events: none; mix-blend-mode: screen; transform: translate(-50%, -50%) scale(0); }
+        .gacha-flash.animate { animation: flashShockwave 1s ease-out forwards; }
+        @keyframes flashShockwave {
             0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
             10% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-            40% { transform: translate(-50%, -50%) scale(2); opacity: 1; }
             100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
         }
 
-        .gacha-result { display: flex; flex-direction: column; align-items: center; z-index: 10; opacity: 0; transform: scale(0.8); animation: popResult 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        @keyframes popResult { 100% { transform: scale(1); opacity: 1; } }
+        /* Cards */
+        .gacha-result { display: flex; flex-direction: column; align-items: center; z-index: 10; width:100%;}
         
-        .gacha-item-icon { font-size: 120px; filter: drop-shadow(0 0 40px rgba(255,255,255,0.6)); margin-bottom: 20px; animation: floatIcon 2s ease-in-out infinite alternate; }
-        @keyframes floatIcon { from { transform: translateY(0); } to { transform: translateY(-10px); } }
-        .gacha-item-name { font-size: 36px; font-weight: bold; color: var(--text-gold); text-shadow: 0 0 15px rgba(255,204,0,0.8); margin-bottom: 5px; }
-        .gacha-item-type { font-size: 18px; color: var(--text-dim); margin-bottom: 50px; text-transform: uppercase; letter-spacing: 2px;}
+        .gacha-card { perspective: 1000px; width: 100%; transition: transform 0.2s; }
+        .gacha-card-inner { width: 100%; height: 100%; transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; position: relative; }
+        .gacha-card.flipped .gacha-card-inner { transform: rotateY(180deg); }
         
-        .gacha-multi-item { display:flex; flex-direction:column; align-items:center; background:rgba(0,0,0,0.5); padding:15px 5px; border-radius:12px; border:2px solid transparent; justify-content:center; backdrop-filter: blur(5px); opacity: 0; transform: translateY(20px) scale(0.8); animation: revealItem 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; position: relative; overflow: hidden; }
-        @keyframes revealItem { 100% { opacity: 1; transform: translateY(0) scale(1); } }
+        .gacha-card-front, .gacha-card-back { width: 100%; backface-visibility: hidden; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: absolute; top: 0; left: 0; bottom: 0; right: 0; }
         
-        .gacha-multi-item::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); transform: skewX(-20deg); animation: shine 3s infinite; }
-        @keyframes shine { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
+        .gacha-card-front { background: linear-gradient(135deg, #1a1a2e, #0f0f1a); border: 2px solid var(--text-gold); color: var(--text-gold); font-size: 40px; box-shadow: 0 0 15px rgba(255,204,0,0.3); background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0, rgba(255,255,255,0.05) 10px, transparent 10px, transparent 20px); }
+        .gacha-card-back { transform: rotateY(180deg); background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); }
 
-        .gacha-multi-item .icon { font-size:45px; margin-bottom:8px; z-index:2; position:relative;}
-        .gacha-multi-item .name { font-size:12px; font-weight:900; white-space:nowrap; text-align:center; z-index:2; position:relative; text-shadow: 1px 1px 3px #000; }
+        /* Single View */
+        #single-card { width: 220px; height: 320px; }
+        #single-card .icon { font-size: 100px; margin-bottom: 20px; animation: floatIcon 2s ease-in-out infinite alternate; }
+        @keyframes floatIcon { from { transform: translateY(0); } to { transform: translateY(-10px); } }
+        #single-card .name { font-size: 28px; font-weight: bold; margin-bottom: 10px; text-shadow: 0 0 10px currentColor; }
+        #single-card .type { font-size: 14px; color: #ccc; letter-spacing: 2px; }
+
+        /* Multi View */
+        #gacha-multi-view { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 100%; perspective: 1000px; margin-bottom: 20px;}
+        .multi-card-wrapper { width: 100%; aspect-ratio: 3/4; }
+        .multi-card-wrapper .gacha-card-front { font-size: 24px; border-width: 1px; }
+        .multi-card-wrapper .gacha-card-back { padding: 5px; }
+        .multi-card-wrapper .icon { font-size: 35px; margin-bottom: 5px; }
+        .multi-card-wrapper .name { font-size: 11px; font-weight: bold; text-align: center; text-shadow: 1px 1px 3px #000; }
         
-        .gacha-close-btn { padding: 15px 40px; background: rgba(0,0,0,0.5); border: 2px solid #fff; color: #fff; font-size: 18px; border-radius: 30px; cursor: pointer; transition: 0.3s; font-weight: bold; backdrop-filter: blur(5px); box-shadow: 0 0 15px rgba(255,255,255,0.2); }
+        .gacha-close-btn { padding: 15px 40px; background: rgba(0,0,0,0.5); border: 2px solid #fff; color: #fff; font-size: 18px; border-radius: 30px; cursor: pointer; transition: 0.3s; font-weight: bold; backdrop-filter: blur(5px); box-shadow: 0 0 15px rgba(255,255,255,0.2); opacity: 0; pointer-events: none;}
+        .gacha-close-btn.show { opacity: 1; pointer-events: auto; }
         .gacha-close-btn:hover { background: #fff; color: #000; box-shadow: 0 0 30px rgba(255,255,255,0.6); transform: scale(1.05); }
 
         /* --- Tasks & Temple --- */
@@ -478,20 +497,26 @@
 
         <!-- Gacha Animation Overlay -->
         <div class="gacha-overlay" id="gacha-overlay">
-            <div class="meteor-container" id="meteor-container">
-                <div class="meteor" id="gacha-meteor"></div>
-            </div>
+            <div class="magic-circle" id="magic-circle"></div>
+            <div class="meteor-container" id="meteor-container"></div>
             <div class="gacha-flash" id="gacha-flash"></div>
             <div class="gacha-result" id="gacha-result" style="display:none; width:100%; max-width:414px; padding:20px;">
-                <div id="gacha-single-view" style="display:flex; flex-direction:column; align-items:center; width:100%;">
-                    <div class="gacha-item-icon" id="gacha-item-icon">❓</div>
-                    <div class="gacha-item-name" id="gacha-item-name">未知物品</div>
-                    <div class="gacha-item-type" id="gacha-item-type">武器</div>
+                <div id="gacha-single-view" style="display:none; width:100%; justify-content:center;">
+                    <div class="gacha-card" id="single-card">
+                        <div class="gacha-card-inner" id="single-card-inner">
+                            <div class="gacha-card-front">❓</div>
+                            <div class="gacha-card-back" id="single-card-back">
+                                <div class="icon" id="gacha-item-icon">❓</div>
+                                <div class="name" id="gacha-item-name">未知物品</div>
+                                <div class="type" id="gacha-item-type">武器</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div id="gacha-multi-view" style="display:none; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 30px; width:100%;">
+                <div id="gacha-multi-view" style="display:none;">
                     <!-- items injected here -->
                 </div>
-                <div style="text-align:center; width:100%;">
+                <div style="text-align:center; width:100%; margin-top:20px;">
                     <button class="gacha-close-btn" onclick="closeGachaAnimation()">點擊繼續</button>
                 </div>
             </div>
@@ -1196,78 +1221,130 @@
             }
         }
 
+        function createParticles(color, count) {
+            const container = document.getElementById('meteor-container');
+            container.innerHTML = '';
+            for(let i=0; i<count; i++) {
+                let p = document.createElement('div');
+                p.className = 'particle';
+                p.style.color = color;
+                let angle = Math.random() * Math.PI * 2;
+                let dist = 100 + Math.random() * 300;
+                let tx = Math.cos(angle) * dist;
+                let ty = Math.sin(angle) * dist;
+                p.style.setProperty('--tx', `${tx}px`);
+                p.style.setProperty('--ty', `${ty}px`);
+                p.style.left = '50%';
+                p.style.top = '50%';
+                container.appendChild(p);
+            }
+        }
+
         function playGachaAnimation(item) {
             const overlay = document.getElementById('gacha-overlay');
-            const meteor = document.getElementById('gacha-meteor');
-            const flash = document.getElementById('gacha-flash');
             const result = document.getElementById('gacha-result');
+            const circle = document.getElementById('magic-circle');
+            const singleView = document.getElementById('gacha-single-view');
+            const multiView = document.getElementById('gacha-multi-view');
+            const btn = document.querySelector('.gacha-close-btn');
+            const card = document.getElementById('single-card');
             
             overlay.style.display = 'flex';
             result.style.display = 'none';
-            document.getElementById('gacha-single-view').style.display = 'flex';
-            document.getElementById('gacha-multi-view').style.display = 'none';
-            meteor.className = 'meteor';
-            flash.className = 'gacha-flash';
+            singleView.style.display = 'none';
+            multiView.style.display = 'none';
+            btn.classList.remove('show');
+            card.classList.remove('flipped');
             
-            let rarity = item.rarity || 'epic';
-            meteor.classList.add(rarity);
+            let r = item.rarity || 'epic';
+            let color = '#fff';
+            if(r === 'legendary') color = '#f1c40f';
+            else if(r === 'epic') color = '#e056fd';
+            else if(r === 'rare') color = '#3498db';
+            else color = '#bdc3c7';
             
-            void meteor.offsetWidth; 
-            meteor.classList.add('animate');
+            circle.style.color = color;
+            circle.classList.remove('animate');
+            void circle.offsetWidth;
+            circle.classList.add('animate');
+            
+            createParticles(color, 40);
             
             setTimeout(() => {
+                const flash = document.getElementById('gacha-flash');
+                flash.classList.remove('animate');
+                void flash.offsetWidth;
                 flash.classList.add('animate');
+                
+                overlay.classList.add('shake');
+                setTimeout(() => overlay.classList.remove('shake'), 500);
+
                 setTimeout(() => {
-                    result.style.animation = 'none'; // reset
-                    void result.offsetWidth; // trigger reflow
-                    result.style.animation = 'popResult 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
                     result.style.display = 'flex';
+                    singleView.style.display = 'flex';
                     
                     document.getElementById('gacha-item-icon').innerText = item.icon;
+                    document.getElementById('gacha-item-icon').style.filter = `drop-shadow(0 0 20px ${color})`;
                     document.getElementById('gacha-item-name').innerText = item.name + (item.isDup ? " (重複)" : "");
-                    document.getElementById('gacha-item-type').innerText = item.rarity ? getTypeName(item.type) : '戰鬥技能';
-                    
-                    if(rarity === 'legendary') document.getElementById('gacha-item-name').style.color = '#f1c40f';
-                    else if(rarity === 'epic') document.getElementById('gacha-item-name').style.color = '#e056fd';
-                    else if(rarity === 'rare') document.getElementById('gacha-item-name').style.color = '#3498db';
-                    else document.getElementById('gacha-item-name').style.color = '#bdc3c7';
+                    document.getElementById('gacha-item-name').style.color = color;
+                    document.getElementById('gacha-item-type').innerText = r ? getTypeName(item.type) : '戰鬥技能';
+                    document.getElementById('single-card-back').style.border = `2px solid ${color}`;
+                    document.getElementById('single-card-back').style.boxShadow = `0 0 30px ${color}80`;
+
+                    setTimeout(() => {
+                        card.classList.add('flipped');
+                        setTimeout(() => btn.classList.add('show'), 600);
+                    }, 300);
                     
                 }, 150);
-            }, 800);
+            }, 1800);
         }
 
         function playTenPullAnimation(items) {
             const overlay = document.getElementById('gacha-overlay');
-            const meteor = document.getElementById('gacha-meteor');
-            const flash = document.getElementById('gacha-flash');
             const result = document.getElementById('gacha-result');
+            const circle = document.getElementById('magic-circle');
+            const singleView = document.getElementById('gacha-single-view');
+            const multiView = document.getElementById('gacha-multi-view');
+            const btn = document.querySelector('.gacha-close-btn');
             
             overlay.style.display = 'flex';
             result.style.display = 'none';
-            document.getElementById('gacha-single-view').style.display = 'none';
-            document.getElementById('gacha-multi-view').style.display = 'grid';
-            meteor.className = 'meteor';
-            flash.className = 'gacha-flash';
+            singleView.style.display = 'none';
+            multiView.style.display = 'none';
+            btn.classList.remove('show');
             
             let highestRarity = 'normal';
             if (items.some(i => i.rarity === 'legendary')) highestRarity = 'legendary';
             else if (items.some(i => i.rarity === 'epic' || !i.rarity)) highestRarity = 'epic';
             else if (items.some(i => i.rarity === 'rare')) highestRarity = 'rare';
 
-            meteor.classList.add(highestRarity);
-            void meteor.offsetWidth; 
-            meteor.classList.add('animate');
+            let highestColor = '#bdc3c7';
+            if(highestRarity === 'legendary') highestColor = '#f1c40f';
+            else if(highestRarity === 'epic') highestColor = '#e056fd';
+            else if(highestRarity === 'rare') highestColor = '#3498db';
+
+            circle.style.color = highestColor;
+            circle.classList.remove('animate');
+            void circle.offsetWidth;
+            circle.classList.add('animate');
+            
+            createParticles(highestColor, 80);
             
             setTimeout(() => {
+                const flash = document.getElementById('gacha-flash');
+                flash.classList.remove('animate');
+                void flash.offsetWidth;
                 flash.classList.add('animate');
-                setTimeout(() => {
-                    result.style.animation = 'none'; // reset
-                    void result.offsetWidth; // trigger reflow
-                    result.style.animation = 'popResult 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
-                    result.style.display = 'flex';
+                
+                overlay.classList.add('shake');
+                setTimeout(() => overlay.classList.remove('shake'), 500);
 
-                    const multiView = document.getElementById('gacha-multi-view');
+                setTimeout(() => {
+                    result.style.display = 'flex';
+                    multiView.style.display = 'grid';
                     multiView.innerHTML = '';
+                    
                     items.forEach((item, index) => {
                         let r = item.rarity || 'epic';
                         let color = '#fff';
@@ -1279,14 +1356,33 @@
                         let nameTxt = item.name + (item.isDup ? '<br><span style="color:#e74c3c;font-size:10px;">(轉200🪙)</span>' : '');
 
                         multiView.innerHTML += `
-                            <div class="gacha-multi-item" style="border-color:${color}; box-shadow:0 0 15px ${color}60; animation-delay: ${index * 0.1}s;">
-                                <div class="icon" style="filter:drop-shadow(0 0 10px ${color});">${item.icon}</div>
-                                <div class="name" style="color:${color};">${nameTxt}</div>
+                            <div class="gacha-card multi-card-wrapper" id="mcard-${index}">
+                                <div class="gacha-card-inner">
+                                    <div class="gacha-card-front">❓</div>
+                                    <div class="gacha-card-back" style="border: 2px solid ${color}; box-shadow: 0 0 15px ${color}60;">
+                                        <div class="icon" style="filter:drop-shadow(0 0 10px ${color});">${item.icon}</div>
+                                        <div class="name" style="color:${color};">${nameTxt}</div>
+                                    </div>
+                                </div>
                             </div>
                         `;
                     });
+
+                    items.forEach((_, index) => {
+                        setTimeout(() => {
+                            const mcard = document.getElementById(`mcard-${index}`);
+                            mcard.classList.add('flipped');
+                            mcard.style.transform = 'scale(1.1)';
+                            setTimeout(() => mcard.style.transform = 'scale(1)', 150);
+                            
+                            if (index === items.length - 1) {
+                                setTimeout(() => btn.classList.add('show'), 600);
+                            }
+                        }, 300 + index * 150);
+                    });
+                    
                 }, 150);
-            }, 800);
+            }, 1800);
         }
 
         function closeGachaAnimation() {
