@@ -151,6 +151,36 @@
         .gacha-banner h3 { color: var(--text-gold); margin-bottom: 5px; }
         .gacha-banner button { margin-top: 15px; padding: 10px 20px; background: linear-gradient(to right, #8e44ad, #9b59b6); border: none; color: white; font-weight: bold; border-radius: 20px; cursor: pointer; width: 100%; box-shadow: 0 0 10px rgba(142, 68, 173, 0.5); }
 
+        /* --- Gacha Animation --- */
+        .gacha-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; }
+        .meteor-container { position: absolute; width: 100%; height: 100%; }
+        .meteor { position: absolute; top: -20%; left: 80%; width: 6px; height: 150px; background: linear-gradient(to bottom, transparent, #fff); border-radius: 50%; transform: rotate(-45deg); filter: drop-shadow(0 0 20px #fff); opacity: 0; }
+        .meteor.animate { animation: fallGenshin 1.2s cubic-bezier(0.25, 0.1, 0.25, 1) forwards; }
+        .meteor.epic { background: linear-gradient(to bottom, transparent, #e056fd); filter: drop-shadow(0 0 20px #e056fd) drop-shadow(0 0 40px #8e44ad); }
+        .meteor.legendary { background: linear-gradient(to bottom, transparent, #f1c40f); filter: drop-shadow(0 0 20px #f1c40f) drop-shadow(0 0 40px #f39c12); }
+        .meteor.rare { background: linear-gradient(to bottom, transparent, #3498db); filter: drop-shadow(0 0 20px #3498db) drop-shadow(0 0 40px #2980b9); }
+        .meteor.normal { background: linear-gradient(to bottom, transparent, #bdc3c7); filter: drop-shadow(0 0 20px #bdc3c7); }
+        
+        @keyframes fallGenshin {
+            0% { top: -20%; left: 80%; opacity: 0; transform: scale(1) rotate(-45deg); }
+            20% { opacity: 1; transform: scale(2) rotate(-45deg); }
+            70% { top: 50%; left: 50%; opacity: 1; transform: scale(6) rotate(-45deg); }
+            100% { top: 50%; left: 50%; opacity: 0; transform: scale(15) rotate(-45deg); }
+        }
+
+        .gacha-flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; opacity: 0; pointer-events: none; }
+        .gacha-flash.animate { animation: flashWhite 1.5s ease-out forwards; }
+        @keyframes flashWhite { 0% { opacity: 0; } 10% { opacity: 1; } 100% { opacity: 0; } }
+
+        .gacha-result { display: flex; flex-direction: column; align-items: center; z-index: 10; animation: popResult 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes popResult { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        
+        .gacha-item-icon { font-size: 100px; filter: drop-shadow(0 0 20px rgba(255,255,255,0.5)); margin-bottom: 20px; }
+        .gacha-item-name { font-size: 32px; font-weight: bold; color: var(--text-gold); text-shadow: 0 0 10px rgba(255,204,0,0.5); margin-bottom: 5px; }
+        .gacha-item-type { font-size: 16px; color: var(--text-dim); margin-bottom: 40px; }
+        .gacha-close-btn { padding: 12px 30px; background: transparent; border: 2px solid #fff; color: #fff; font-size: 18px; border-radius: 30px; cursor: pointer; transition: 0.2s; }
+        .gacha-close-btn:hover { background: #fff; color: #000; }
+
         /* --- Tasks & Temple --- */
         .list-container { padding: 10px; display: flex; flex-direction: column; gap: 10px; }
         .card { background: rgba(0,0,0,0.4); border: 1px solid var(--panel-border); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
@@ -420,6 +450,20 @@
                 <div id="qrcode" style="margin:20px auto; padding:10px; background:#fff; width:fit-content; border-radius:8px;"></div>
                 <div style="font-size:30px; color:#e74c3c; font-weight:bold;" id="qr-timer">03:00</div>
                 <button style="margin-top:20px; padding:10px 20px; background:#333; color:#fff; border:none; border-radius:5px; cursor:pointer;" onclick="document.getElementById('qr-modal').style.display='none'; clearInterval(qrInterval);">關閉</button>
+            </div>
+        </div>
+
+        <!-- Gacha Animation Overlay -->
+        <div class="gacha-overlay" id="gacha-overlay">
+            <div class="meteor-container" id="meteor-container">
+                <div class="meteor" id="gacha-meteor"></div>
+            </div>
+            <div class="gacha-flash" id="gacha-flash"></div>
+            <div class="gacha-result" id="gacha-result" style="display:none;">
+                <div class="gacha-item-icon" id="gacha-item-icon">❓</div>
+                <div class="gacha-item-name" id="gacha-item-name">未知物品</div>
+                <div class="gacha-item-type" id="gacha-item-type">武器</div>
+                <button class="gacha-close-btn" onclick="closeGachaAnimation()">點擊繼續</button>
             </div>
         </div>
 
@@ -1068,6 +1112,8 @@
             }
         }
 
+        let pendingGachaMsg = "";
+
         function drawGacha(type) {
             const cost = type === 'equip' ? 300 : 500;
             if(state.coins < cost) {
@@ -1076,22 +1122,64 @@
             }
             state.coins -= cost;
 
+            let item = null;
             if(type === 'equip') {
-                const item = EQUIP_DB[Math.floor(Math.random() * EQUIP_DB.length)];
+                item = EQUIP_DB[Math.floor(Math.random() * EQUIP_DB.length)];
                 state.inventory.equips.push(item.id);
-                showToast(`🛡️ 獲得裝備：【${item.name}】！`);
+                pendingGachaMsg = `🛡️ 獲得裝備：【${item.name}】！`;
             } else {
-                const item = SKILL_DB[Math.floor(Math.random() * SKILL_DB.length)];
+                item = SKILL_DB[Math.floor(Math.random() * SKILL_DB.length)];
                 if(!state.inventory.skills.includes(item.id)) {
                     state.inventory.skills.push(item.id);
-                    showToast(`📜 習得技能：【${item.name}】！`);
+                    pendingGachaMsg = `📜 習得技能：【${item.name}】！`;
                 } else {
                     state.coins += 200;
-                    showToast(`📜 技能重複，轉換為 200 🪙`);
+                    pendingGachaMsg = `📜 技能重複，轉換為 200 🪙`;
                 }
             }
             saveState();
             renderRolePage(); 
+            playGachaAnimation(item);
+        }
+
+        function playGachaAnimation(item) {
+            const overlay = document.getElementById('gacha-overlay');
+            const meteor = document.getElementById('gacha-meteor');
+            const flash = document.getElementById('gacha-flash');
+            const result = document.getElementById('gacha-result');
+            
+            overlay.style.display = 'flex';
+            result.style.display = 'none';
+            meteor.className = 'meteor';
+            flash.className = 'gacha-flash';
+            
+            let rarity = item.rarity || 'epic';
+            meteor.classList.add(rarity);
+            
+            void meteor.offsetWidth; 
+            meteor.classList.add('animate');
+            
+            setTimeout(() => {
+                flash.classList.add('animate');
+                setTimeout(() => {
+                    result.style.display = 'flex';
+                    document.getElementById('gacha-item-icon').innerText = item.icon;
+                    document.getElementById('gacha-item-name').innerText = item.name;
+                    document.getElementById('gacha-item-type').innerText = item.rarity ? getTypeName(item.type) : '戰鬥技能';
+                    
+                    if(rarity === 'legendary') document.getElementById('gacha-item-name').style.color = '#f1c40f';
+                    else if(rarity === 'epic') document.getElementById('gacha-item-name').style.color = '#e056fd';
+                    else if(rarity === 'rare') document.getElementById('gacha-item-name').style.color = '#3498db';
+                    else document.getElementById('gacha-item-name').style.color = '#bdc3c7';
+                    
+                }, 150);
+            }, 1000);
+        }
+
+        function closeGachaAnimation() {
+            document.getElementById('gacha-overlay').style.display = 'none';
+            if(pendingGachaMsg) showToast(pendingGachaMsg);
+            pendingGachaMsg = "";
         }
 
         function renderRolePage() {
