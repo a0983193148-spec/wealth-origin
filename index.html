@@ -293,6 +293,19 @@
         .golden-dungeon-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #f39c12, #e74c3c); border: 2px solid #f1c40f; color: #fff; font-size: 16px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 0 20px rgba(241,196,15,0.3); animation: goldenPulse 2s infinite; }
         .golden-dungeon-btn:disabled { opacity: 0.4; animation: none; filter: grayscale(1); }
         @keyframes goldenPulse { 0%,100%{box-shadow: 0 0 10px rgba(241,196,15,0.3);} 50%{box-shadow: 0 0 25px rgba(241,196,15,0.6);} }
+
+        /* --- Topup Center --- */
+        .topup-btn { background: linear-gradient(135deg, #8e44ad, #9b59b6); border: 2px solid #fff; padding: 10px; border-radius: 8px; color: #fff; font-weight: bold; text-align: center; cursor: pointer; box-shadow: 0 0 10px #8e44ad; animation: float 2s infinite alternate; }
+        .topup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
+        .topup-card { background: rgba(30, 40, 60, 0.9); border: 1px solid #4a69bd; border-radius: 12px; padding: 15px; text-align: center; cursor: pointer; position: relative; transition: transform 0.2s, box-shadow 0.2s; overflow: hidden; }
+        .topup-card:active { transform: scale(0.95); }
+        .topup-card:hover { box-shadow: 0 0 15px rgba(106, 176, 76, 0.5); border-color: #6ab04c; }
+        .topup-gems { font-size: 24px; color: #f1c40f; font-weight: bold; text-shadow: 0 0 5px rgba(241,196,15,0.5); }
+        .topup-price { font-size: 14px; color: #fff; background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 20px; display: inline-block; margin-top: 8px; }
+        .topup-double-tag { position: absolute; top: 0; left: 0; width: 100%; background: #e74c3c; color: white; font-size: 10px; font-weight: bold; padding: 2px 0; text-transform: uppercase; letter-spacing: 1px; }
+        .qr-image { width: 200px; height: 200px; margin: 15px auto; display: block; border-radius: 8px; border: 3px solid #fff; }
+        .debuff-warning { color: #e74c3c; font-weight: bold; font-size: 14px; text-align: center; padding: 10px; background: rgba(231, 76, 60, 0.2); border: 1px solid #e74c3c; border-radius: 8px; margin-bottom: 10px; display: none; animation: flashRed 1s infinite alternate; }
+        @keyframes flashRed { from { box-shadow: 0 0 5px #e74c3c; } to { box-shadow: 0 0 20px #e74c3c; } }
     </style>
 </head>
 <body>
@@ -321,6 +334,7 @@
 
         <!-- 1. 探索 (Combat) -->
         <div id="page-combat" class="page active">
+            <div id="debuff-warning" class="debuff-warning">⚠️ 本月嚴重超支！戰鬥力大幅下降 (剩餘 10%)</div>
             <div class="combat-arena">
                 <div class="sprites-area">
                     <!-- Player -->
@@ -397,6 +411,9 @@
 
         <!-- 4. 市集 (Market/Gacha) -->
         <div id="page-market" class="page">
+            <div style="padding: 15px 20px 0 20px;">
+                <div class="topup-btn" onclick="openTopupCenter()">💎 前往儲值中心</div>
+            </div>
             <div class="gacha-container">
                 <div class="gacha-banner glass-panel">
                     <div style="font-size:60px;">🛡️</div>
@@ -536,6 +553,32 @@
             </div>
         </div>
 
+        <!-- Top-up Center Modal -->
+        <div class="modal-overlay" id="topup-modal">
+            <div class="glass-panel accounting-panel" style="max-height:85%; display:flex; flex-direction:column; width:95%; max-width:400px; padding:0;">
+                <div class="close-btn" style="z-index:10; top:15px; right:15px;" onclick="document.getElementById('topup-modal').style.display='none'">×</div>
+                <h3 style="color:var(--text-gold); text-align:center; margin:20px 0 10px 0;">💎 儲值中心</h3>
+                <div style="text-align:center; font-size:12px; color:var(--text-dim);">首儲可獲得雙倍創世結晶 (鑽石)</div>
+                <div class="topup-grid" id="topup-grid">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Modal -->
+        <div class="modal-overlay" id="payment-modal">
+            <div class="glass-panel accounting-panel" style="text-align:center;">
+                <div class="close-btn" onclick="document.getElementById('payment-modal').style.display='none'">×</div>
+                <h3 style="color:var(--text-gold); margin-bottom:10px;">付款確認</h3>
+                <div style="font-size:14px; color:var(--text-dim); margin-bottom:5px;">請掃描下方 QR Code 進行付款</div>
+                <img src="./assets/qrcode.png" class="qr-image" alt="QR Code">
+                <div style="font-size:24px; font-weight:bold; color:#fff; margin-bottom:20px;">應付金額: <span id="payment-price">$0</span></div>
+                <button onclick="simulatePayment()" style="width:100%; padding:15px; background:linear-gradient(135deg, #27ae60, #2ecc71); border:none; color:white; font-size:16px; font-weight:bold; border-radius:8px; cursor:pointer; box-shadow: 0 4px 15px rgba(46,204,113,0.4);">
+                    ✅ 模擬付款完成
+                </button>
+            </div>
+        </div>
+
         <!-- Gacha Animation Overlay -->
         <div class="gacha-overlay" id="gacha-overlay">
             <video id="gacha-video" muted playsinline style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:1; display:none;"></video>
@@ -656,7 +699,8 @@
             achievements: {},
             budget: { monthly: 0, enabled: false },
             goldenDungeon: { available: false, lastReset: null },
-            totalAccountingCount: 0
+            totalAccountingCount: 0,
+            topupRecord: {}
         };
 
         let state = JSON.parse(localStorage.getItem('rpg_v2_state')) || JSON.parse(JSON.stringify(DEFAULT_STATE));
@@ -673,6 +717,7 @@
         if(!state.budget) state.budget = { monthly: 0, enabled: false };
         if(!state.goldenDungeon) state.goldenDungeon = { available: false, lastReset: null };
         if(!state.totalAccountingCount) state.totalAccountingCount = 0;
+        if(!state.topupRecord) state.topupRecord = {};
         
         // Give 1000 gems testing bonus
         if(!state.testGemsGiven) {
@@ -757,6 +802,17 @@
             player.atk = baseAtk + eqAtk;
             let oldMax = player.maxHp;
             player.maxHp = baseHp + eqHp;
+
+            // --- Over-budget Debuff ---
+            let isOverBudget = false;
+            if (state.budget.enabled && state.budget.monthly > 0) {
+                if (getMonthlySpent() > state.budget.monthly) {
+                    isOverBudget = true;
+                    player.atk = Math.max(1, Math.floor(player.atk * 0.1));
+                    player.maxHp = Math.max(10, Math.floor(player.maxHp * 0.1));
+                }
+            }
+            document.getElementById('debuff-warning').style.display = isOverBudget ? 'block' : 'none';
             
             if(player.hp === 0 || oldMax === 0) player.hp = player.maxHp;
             else player.hp = Math.min(player.maxHp, Math.round(player.hp * (player.maxHp / oldMax)));
@@ -1122,6 +1178,7 @@
                 checkTimeLimitedTask();
                 saveState();
                 closeAccountingModal();
+                recalculatePlayerStats();
                 renderAccountingPage();
             } else {
                 if (currentAmount === "0") currentAmount = val;
@@ -1182,6 +1239,7 @@
             saveState();
             renderAccountingPage();
             showToast(val === 0 ? '預算功能已關閉' : `✅ 每月預算設定為 $${val}`);
+            recalculatePlayerStats();
         }
 
         function getMonthlySpent() {
@@ -1371,6 +1429,64 @@
                     `).join('') || '<div style="text-align:center; padding:15px; color:var(--text-dim);">尚無紀錄</div>'}
                 </div>
             `;
+        }
+
+        // --- Top-up System ---
+        const TOPUP_TIERS = [
+            { id: 't1', gems: 60, price: 33 },
+            { id: 't2', gems: 300, price: 170 },
+            { id: 't3', gems: 980, price: 490 },
+            { id: 't4', gems: 1980, price: 990 },
+            { id: 't5', gems: 3280, price: 1690 },
+            { id: 't6', gems: 6480, price: 3290 }
+        ];
+
+        let pendingTopup = null;
+
+        function openTopupCenter() {
+            document.getElementById('topup-modal').style.display = 'flex';
+            renderTopupCenter();
+        }
+
+        function renderTopupCenter() {
+            const grid = document.getElementById('topup-grid');
+            grid.innerHTML = '';
+            TOPUP_TIERS.forEach(t => {
+                const isDouble = !state.topupRecord[t.id];
+                grid.innerHTML += `
+                    <div class="topup-card" onclick="openPaymentModal('${t.id}')">
+                        ${isDouble ? '<div class="topup-double-tag">首儲雙倍</div>' : ''}
+                        <div style="font-size:30px; margin:10px 0;">💎</div>
+                        <div class="topup-gems">${t.gems}</div>
+                        <div class="topup-price">NT$ ${t.price}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function openPaymentModal(tierId) {
+            const tier = TOPUP_TIERS.find(t => t.id === tierId);
+            if(!tier) return;
+            pendingTopup = tier;
+            document.getElementById('payment-price').innerText = `NT$ ${tier.price}`;
+            document.getElementById('payment-modal').style.display = 'flex';
+        }
+
+        function simulatePayment() {
+            if(!pendingTopup) return;
+            const t = pendingTopup;
+            const isDouble = !state.topupRecord[t.id];
+            const gainedGems = isDouble ? t.gems * 2 : t.gems;
+            
+            state.gems += gainedGems;
+            state.topupRecord[t.id] = true;
+            
+            showToast(`✅ 儲值成功！獲得 ${gainedGems} 💎`);
+            saveState();
+            updateUI();
+            
+            document.getElementById('payment-modal').style.display = 'none';
+            renderTopupCenter();
         }
 
         // --- Profile (我的) ---
