@@ -503,6 +503,7 @@
 
         <!-- Gacha Animation Overlay -->
         <div class="gacha-overlay" id="gacha-overlay">
+            <video id="gacha-video" muted playsinline style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:1; display:none;"></video>
             <div class="magic-circle" id="magic-circle"></div>
             <div class="meteor-container" id="meteor-container"></div>
             <div class="gacha-flash" id="gacha-flash"></div>
@@ -1271,6 +1272,7 @@
             const multiView = document.getElementById('gacha-multi-view');
             const btn = document.querySelector('.gacha-close-btn');
             const card = document.getElementById('single-card');
+            const video = document.getElementById('gacha-video');
             
             overlay.style.display = 'flex';
             result.style.display = 'none';
@@ -1279,6 +1281,10 @@
             btn.classList.remove('show');
             card.classList.remove('flipped');
             
+            // Hide old effects
+            circle.style.display = 'none';
+            document.getElementById('meteor-container').style.display = 'none';
+            
             let r = item.rarity || 'epic';
             let color = '#fff';
             if(r === 'legendary') color = '#f1c40f';
@@ -1286,14 +1292,16 @@
             else if(r === 'rare') color = '#3498db';
             else color = '#bdc3c7';
             
-            circle.style.color = color;
-            circle.classList.remove('animate');
-            void circle.offsetWidth;
-            circle.classList.add('animate');
+            // Play video
+            video.src = './assets/gacha_video.mp4';
+            video.style.display = 'block';
+            video.currentTime = 0;
+            video.play().catch(() => {});
             
-            createParticles(color, 40);
-            
-            setTimeout(() => {
+            // When video ends, show result
+            video.onended = () => {
+                video.style.display = 'none';
+                
                 const flash = document.getElementById('gacha-flash');
                 flash.classList.remove('animate');
                 void flash.offsetWidth;
@@ -1320,7 +1328,7 @@
                     }, 300);
                     
                 }, 150);
-            }, 1800);
+            };
         }
 
         function playTenPullAnimation(items) {
@@ -1330,6 +1338,7 @@
             const singleView = document.getElementById('gacha-single-view');
             const multiView = document.getElementById('gacha-multi-view');
             const btn = document.querySelector('.gacha-close-btn');
+            const video = document.getElementById('gacha-video');
             
             overlay.style.display = 'flex';
             result.style.display = 'none';
@@ -1337,6 +1346,10 @@
             multiView.style.display = 'none';
             btn.classList.remove('show');
             
+            // Hide old effects
+            circle.style.display = 'none';
+            document.getElementById('meteor-container').style.display = 'none';
+
             let highestRarity = 'normal';
             if (items.some(i => i.rarity === 'legendary')) highestRarity = 'legendary';
             else if (items.some(i => i.rarity === 'epic' || !i.rarity)) highestRarity = 'epic';
@@ -1347,14 +1360,15 @@
             else if(highestRarity === 'epic') highestColor = '#e056fd';
             else if(highestRarity === 'rare') highestColor = '#3498db';
 
-            circle.style.color = highestColor;
-            circle.classList.remove('animate');
-            void circle.offsetWidth;
-            circle.classList.add('animate');
+            // Play video
+            video.src = './assets/gacha_video.mp4';
+            video.style.display = 'block';
+            video.currentTime = 0;
+            video.play().catch(() => {});
             
-            createParticles(highestColor, 80);
-            
-            setTimeout(() => {
+            video.onended = () => {
+                video.style.display = 'none';
+                
                 const flash = document.getElementById('gacha-flash');
                 flash.classList.remove('animate');
                 void flash.offsetWidth;
@@ -1405,10 +1419,14 @@
                     });
                     
                 }, 150);
-            }, 1800);
+            };
         }
 
         function closeGachaAnimation() {
+            const video = document.getElementById('gacha-video');
+            video.pause();
+            video.style.display = 'none';
+            video.onended = null;
             document.getElementById('gacha-overlay').style.display = 'none';
             if(pendingGachaMsg) showToast(pendingGachaMsg);
             pendingGachaMsg = "";
