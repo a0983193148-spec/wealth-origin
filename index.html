@@ -274,9 +274,10 @@
         <!-- Top Status Bar -->
         <div class="status-bar">
             <div class="stage-badge" id="stage-display">關卡 1-1</div>
-            <div style="display:flex; gap:15px;">
+            <div style="display:flex; gap:15px; align-items:center;">
                 <div class="currency">🪙 <span id="coin-val">0</span></div>
                 <div class="currency">💎 <span id="gem-val">0</span></div>
+                <div class="profile-avatar" id="top-avatar-display" style="width:30px; height:30px; font-size:18px; margin-left:5px; border-width:1px;"></div>
             </div>
         </div>
 
@@ -582,8 +583,8 @@
         const MONSTERS = [
             { id: 1, name: '吶喊哥', icon: '<img src="./assets/monster1.png" style="width:100%;height:100%;object-fit:cover;border-radius:10px;transform:scale(1.5);">', baseHp: 50, baseAtk: 5, type: 'normal' },
             { id: 2, name: '功德哥', icon: '<img src="./assets/monster2.png" style="width:100%;height:100%;object-fit:cover;border-radius:10px;transform:scale(1.5);">', baseHp: 80, baseAtk: 12, type: 'normal' },
-            { id: 3, name: '阿偉', icon: '<img src="./assets/monster3.png" style="width:100%;height:100%;object-fit:cover;border-radius:10px;transform:scale(1.5);">', baseHp: 150, baseAtk: 25, type: 'elite' },
-            { id: 4, name: '真·阿偉', icon: '<img src="./assets/monster3.png" style="width:100%;height:100%;object-fit:cover;border-radius:10px;transform:scale(2);filter:drop-shadow(0 0 10px red);">', baseHp: 500, baseAtk: 50, type: 'boss' } 
+            { id: 3, name: '阿偉', icon: '👦', baseHp: 150, baseAtk: 25, type: 'elite' },
+            { id: 4, name: '秦始皇', icon: '<img src="./assets/monster3.png" style="width:100%;height:100%;object-fit:cover;border-radius:10px;transform:scale(2);filter:drop-shadow(0 0 10px gold);">', baseHp: 500, baseAtk: 50, type: 'boss' } 
         ];
 
         const FRIENDS_DB = [
@@ -615,8 +616,8 @@
         let state = JSON.parse(localStorage.getItem('rpg_v2_state')) || JSON.parse(JSON.stringify(DEFAULT_STATE));
         
         // Data Migration for older versions
-        if(!state.profile) state.profile = { name: '勇者', avatar: '<img src="./assets/player.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%;transform:scale(1.2);">', password: null };
-        if(state.profile.avatar === '🧙‍♂️') state.profile.avatar = '<img src="./assets/player.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%;transform:scale(1.2);">';
+        if(!state.profile) state.profile = { name: '勇者', avatar: '🧙‍♂️', password: null };
+        if(state.profile.avatar.includes('<img')) state.profile.avatar = '🧙‍♂️'; // Revert back to emoji for profile, since battle sprite is hardcoded
         if(!state.history) state.history = [];
         if(!state.accountingDaily) state.accountingDaily = { count: 0, lastReset: null };
         
@@ -1023,8 +1024,9 @@
         function updateProfileUI() {
             document.getElementById('profile-name-display').innerText = state.profile.name;
             document.getElementById('profile-avatar-display').innerHTML = state.profile.avatar;
+            document.getElementById('top-avatar-display').innerHTML = state.profile.avatar;
             document.getElementById('player-name').innerText = state.profile.name;
-            document.getElementById('sprite-player').innerHTML = state.profile.avatar;
+            document.getElementById('sprite-player').innerHTML = '<img src="./assets/player.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%;transform:scale(1.5);">';
         }
 
         function openProfileEdit() {
