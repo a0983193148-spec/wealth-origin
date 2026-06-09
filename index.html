@@ -570,6 +570,12 @@
             state.testGemsGiven = true;
         }
 
+        // Give 10000 coins testing bonus
+        if(!state.testCoinsGiven) {
+            state.coins += 10000;
+            state.testCoinsGiven = true;
+        }
+
         // Player Combat State
         let player = { hp: 0, maxHp: 100, atk: 10, skillCDs: [0, 0, 0], hasMoneyBuff: false };
         let monster = { hp: 0, maxHp: 50, atk: 5, id: 0, type: 'normal' };
