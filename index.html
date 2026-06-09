@@ -257,6 +257,42 @@
         #login-screen { position: absolute; top:0; left:0; width:100%; height:100%; background: var(--bg-dark); z-index: 500; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         #login-screen input { padding: 10px; margin: 10px; font-size: 18px; border-radius: 8px; border: 1px solid #555; background: #222; color: white; text-align: center; }
         #login-screen button { padding: 10px 20px; background: var(--text-gold); color: black; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; }
+
+        /* --- Accounting Page --- */
+        .acct-page { padding: 15px; display: flex; flex-direction: column; gap: 15px; }
+        .acct-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .acct-card { background: rgba(0,0,0,0.5); border: 1px solid var(--panel-border); border-radius: 12px; padding: 12px; text-align: center; }
+        .acct-card .acct-val { font-size: 22px; font-weight: bold; color: var(--text-gold); margin-top: 4px; }
+        .acct-card .acct-label { font-size: 10px; color: var(--text-dim); }
+        .acct-streak-bar { background: rgba(0,0,0,0.5); border: 1px solid var(--panel-border); border-radius: 12px; padding: 15px; }
+        .streak-dots { display: flex; justify-content: space-between; margin-top: 10px; }
+        .streak-dot { width: 30px; height: 30px; border-radius: 50%; background: #333; border: 2px solid #555; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .streak-dot.active { background: linear-gradient(135deg, #f1c40f, #e67e22); border-color: #f1c40f; color: #000; font-weight: bold; }
+        .streak-dot.milestone { border-color: #e74c3c; }
+        .acct-chart-box { background: rgba(0,0,0,0.5); border: 1px solid var(--panel-border); border-radius: 12px; padding: 15px; }
+        .acct-chart-title { font-size: 14px; font-weight: bold; color: var(--text-gold); margin-bottom: 10px; }
+        .pie-chart-container { display: flex; align-items: center; gap: 15px; }
+        .pie-legend { display: flex; flex-direction: column; gap: 4px; font-size: 11px; }
+        .pie-legend-item { display: flex; align-items: center; gap: 6px; }
+        .pie-legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .bar-chart { display: flex; align-items: flex-end; justify-content: space-between; height: 100px; gap: 5px; }
+        .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .bar-col-bar { width: 100%; border-radius: 4px 4px 0 0; background: linear-gradient(to top, #3498db, #2ecc71); min-height: 2px; transition: height 0.5s; }
+        .bar-col-label { font-size: 9px; color: var(--text-dim); }
+        .bar-col-val { font-size: 9px; color: var(--text-gold); }
+        .budget-section { background: rgba(0,0,0,0.5); border: 1px solid var(--panel-border); border-radius: 12px; padding: 15px; }
+        .budget-bar-outer { width: 100%; height: 20px; background: #222; border-radius: 10px; overflow: hidden; margin-top: 8px; border: 1px solid #444; }
+        .budget-bar-inner { height: 100%; border-radius: 10px; transition: width 0.5s; }
+        .acct-achieve { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .achieve-badge { background: rgba(0,0,0,0.5); border: 1px solid #555; border-radius: 8px; padding: 10px; text-align: center; font-size: 11px; opacity: 0.4; }
+        .achieve-badge.unlocked { opacity: 1; border-color: var(--text-gold); background: rgba(255,204,0,0.08); }
+        .achieve-badge .achieve-icon { font-size: 28px; }
+        .acct-btn-record { width: 100%; padding: 15px; background: linear-gradient(135deg, #f1c40f, #e67e22); border: none; color: #000; font-size: 18px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 15px rgba(241,196,15,0.4); }
+        .acct-btn-record:active { transform: scale(0.97); }
+        .buff-tier-info { background: rgba(39,174,96,0.15); border: 1px solid #27ae60; border-radius: 8px; padding: 10px; font-size: 12px; text-align: center; }
+        .golden-dungeon-btn { width: 100%; padding: 12px; background: linear-gradient(135deg, #f39c12, #e74c3c); border: 2px solid #f1c40f; color: #fff; font-size: 16px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 0 20px rgba(241,196,15,0.3); animation: goldenPulse 2s infinite; }
+        .golden-dungeon-btn:disabled { opacity: 0.4; animation: none; filter: grayscale(1); }
+        @keyframes goldenPulse { 0%,100%{box-shadow: 0 0 10px rgba(241,196,15,0.3);} 50%{box-shadow: 0 0 25px rgba(241,196,15,0.6);} }
     </style>
 </head>
 <body>
@@ -383,11 +419,10 @@
             </div>
         </div>
 
-        <!-- 5. 神殿 (Temple/Offers) -->
-        <div id="page-temple" class="page">
-            <div style="text-align:center; padding:15px; color:var(--text-dim); font-size:12px;">使用極度珍貴的 💎 鑽石兌換現實世界的獎勵。</div>
-            <div class="list-container" id="offers-list">
-                <!-- Offers injected via JS -->
+        <!-- 5. 記帳 (Accounting Dashboard) -->
+        <div id="page-accounting" class="page">
+            <div class="acct-page" id="acct-page-content">
+                <!-- Injected by renderAccountingPage() -->
             </div>
         </div>
 
@@ -436,7 +471,7 @@
             <div class="nav-item" onclick="switchPage('role', this)"><span class="nav-icon">👤</span>角色</div>
             <div class="nav-item" onclick="switchPage('tasks', this)"><span class="nav-icon">📜</span>任務</div>
             <div class="nav-item" onclick="switchPage('market', this)"><span class="nav-icon">🎪</span>市集</div>
-            <div class="nav-item" onclick="switchPage('temple', this)"><span class="nav-icon">🏛️</span>神殿</div>
+            <div class="nav-item" onclick="switchPage('accounting', this)"><span class="nav-icon">📊</span>記帳</div>
             <div class="nav-item" onclick="switchPage('friends', this)"><span class="nav-icon">🤝</span>好友</div>
             <div class="nav-item" onclick="switchPage('profile', this)"><span class="nav-icon">⚙️</span>我的</div>
         </div>
@@ -615,8 +650,13 @@
                 timeLimit: { claimed: false, lastReset: null }
             },
             profile: { name: '勇者', avatar: '<img src="./assets/player.png" style="width:100%;height:100%;object-fit:cover;border-radius:50%;transform:scale(1.2);">', password: null },
-            history: [], // { id, cat, amount, date }
-            accountingDaily: { count: 0, lastReset: null }
+            history: [], // { id, cat, amount, item, store, date }
+            accountingDaily: { count: 0, lastReset: null },
+            accountingStreak: { days: 0, lastDate: null },
+            achievements: {},
+            budget: { monthly: 0, enabled: false },
+            goldenDungeon: { available: false, lastReset: null },
+            totalAccountingCount: 0
         };
 
         let state = JSON.parse(localStorage.getItem('rpg_v2_state')) || JSON.parse(JSON.stringify(DEFAULT_STATE));
@@ -626,6 +666,11 @@
         if(state.profile.avatar.includes('<img')) state.profile.avatar = '🧙‍♂️'; // Revert back to emoji for profile, since battle sprite is hardcoded
         if(!state.history) state.history = [];
         if(!state.accountingDaily) state.accountingDaily = { count: 0, lastReset: null };
+        if(!state.accountingStreak) state.accountingStreak = { days: 0, lastDate: null };
+        if(!state.achievements) state.achievements = {};
+        if(!state.budget) state.budget = { monthly: 0, enabled: false };
+        if(!state.goldenDungeon) state.goldenDungeon = { available: false, lastReset: null };
+        if(!state.totalAccountingCount) state.totalAccountingCount = 0;
         
         // Give 1000 gems testing bonus
         if(!state.testGemsGiven) {
@@ -682,6 +727,7 @@
             renderOffers();
             updateProfileUI();
             renderFriends();
+            renderAccountingPage();
             checkDailyResets();
             
             // Set up game loop / periodic checks
@@ -1004,37 +1050,325 @@
                     return;
                 }
                 
-                // Add to history
+                const today = new Date().toISOString().split('T')[0];
+                
+                // Add to history (keep last 200)
                 state.history.unshift({
                     id: Date.now(),
                     cat: currentCat,
                     amount: amt,
                     item: itemName,
                     store: storeName || '無',
-                    date: new Date().toLocaleString('zh-TW', {month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'})
+                    date: new Date().toLocaleString('zh-TW', {month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'}),
+                    fullDate: today
                 });
-                if(state.history.length > 50) state.history.pop(); // Keep last 50
+                if(state.history.length > 200) state.history.pop();
 
                 // Rewards! Non-linear decay per daily usage
                 let coinReward = Math.floor(100 / Math.pow(1.5, state.accountingDaily.count));
                 state.accountingDaily.count++;
+                state.totalAccountingCount++;
 
-                state.coins += coinReward; 
+                // --- Streak Logic ---
+                if (state.accountingStreak.lastDate !== today) {
+                    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                    if (state.accountingStreak.lastDate === yesterday) {
+                        state.accountingStreak.days++;
+                    } else if (state.accountingStreak.lastDate !== today) {
+                        state.accountingStreak.days = 1;
+                    }
+                    state.accountingStreak.lastDate = today;
+                    
+                    // Streak Milestones
+                    const sd = state.accountingStreak.days;
+                    if (sd === 3) { coinReward += 200; showToast('🔥 連續記帳 3 天！額外獲得 200 🪙'); }
+                    if (sd === 7) { coinReward += 500; state.gems += 1; showToast('🔥 連續 7 天！+500🪙 +1💎'); }
+                    if (sd === 14) { coinReward += 1000; state.gems += 3; showToast('🔥 連續 14 天！+1000🪙 +3💎'); }
+                    if (sd === 30) { coinReward += 5000; state.gems += 10; showToast('🏆 連續 30 天！記帳大師！+5000🪙 +10💎'); }
+                }
+
+                state.coins += coinReward;
+
+                // --- Buff Tiers ---
+                const dailyCount = state.accountingDaily.count;
                 player.hasMoneyBuff = true;
-                player.hp = Math.min(player.maxHp, player.hp + Math.floor(player.maxHp * 0.5)); 
+                if (dailyCount >= 5) {
+                    player.hp = player.maxHp;
+                    player.atk = Math.floor(player.atk * 1.3);
+                } else if (dailyCount >= 3) {
+                    player.hp = Math.min(player.maxHp, player.hp + Math.floor(player.maxHp * 0.3));
+                    player.atk = Math.floor(player.atk * 1.2);
+                } else {
+                    player.hp = Math.min(player.maxHp, player.hp + Math.floor(player.maxHp * 0.5));
+                }
                 updateHealthBars();
-                
                 document.getElementById('player-buff').style.display = 'block';
-                showToast(`✨ 記帳完成！獲得 ${coinReward} 🪙 與【鈔能力】！`);
+
+                // --- Golden Dungeon Unlock ---
+                if (dailyCount >= 3 && state.goldenDungeon.lastReset !== today) {
+                    state.goldenDungeon.available = true;
+                    state.goldenDungeon.lastReset = today;
+                    showToast('⚔️ 黃金副本已解鎖！去記帳頁挑戰！');
+                }
+
+                // --- Achievements ---
+                checkAccountingAchievements(amt);
+
+                let buffTierName = dailyCount >= 5 ? 'MAX' : (dailyCount >= 3 ? 'II' : 'I');
+                showToast(`✨ 記帳完成！+${coinReward}🪙 鈔能力 Lv.${buffTierName}！`);
                 
                 checkTimeLimitedTask();
                 saveState();
                 closeAccountingModal();
+                renderAccountingPage();
             } else {
                 if (currentAmount === "0") currentAmount = val;
                 else if (currentAmount.length < 7) currentAmount += val;
             }
             document.getElementById('amount-input').innerText = currentAmount;
+        }
+
+        // --- Achievement Definitions ---
+        const ACCT_ACHIEVEMENTS = [
+            { id: 'first', name: '初心者', icon: '🌱', desc: '首次記帳', check: (s) => s.totalAccountingCount >= 1 },
+            { id: 'a50', name: '精打細算', icon: '🧮', desc: '累計記帳 50 筆', check: (s) => s.totalAccountingCount >= 50 },
+            { id: 'a100', name: '理財王', icon: '👑', desc: '累計記帳 100 筆', check: (s) => s.totalAccountingCount >= 100 },
+            { id: 'frugal', name: '節儉之心', icon: '💚', desc: '單日消費低於 $100', check: (s, amt) => amt > 0 && amt < 100 },
+            { id: 'whale', name: '大戶', icon: '🐋', desc: '單筆消費超過 $5000', check: (s, amt) => amt > 5000 },
+            { id: 'streak7', name: '堅持不懈', icon: '🔥', desc: '連續記帳 7 天', check: (s) => s.accountingStreak.days >= 7 },
+            { id: 'streak30', name: '記帳大師', icon: '🏆', desc: '連續記帳 30 天', check: (s) => s.accountingStreak.days >= 30 },
+        ];
+
+        function checkAccountingAchievements(amt) {
+            ACCT_ACHIEVEMENTS.forEach(a => {
+                if (!state.achievements[a.id] && a.check(state, amt)) {
+                    state.achievements[a.id] = true;
+                    showToast(`🏆 成就解鎖：${a.name}！`);
+                }
+            });
+        }
+
+        // --- Golden Dungeon ---
+        function startGoldenDungeon() {
+            if (!state.goldenDungeon.available) {
+                showToast('⚠️ 今日尚未解鎖黃金副本！記帳 3 筆以上即可解鎖');
+                return;
+            }
+            state.goldenDungeon.available = false;
+            // Give bonus gold proportional to stage
+            const bonus = Math.floor(500 + state.stage * 100);
+            state.coins += bonus;
+            state.gems += 2;
+            saveState();
+            renderAccountingPage();
+            showToast(`💰 黃金副本完成！獲得 ${bonus} 🪙 + 2 💎！`);
+        }
+
+        // --- Budget ---
+        function setBudget() {
+            const input = prompt('設定每月預算上限（輸入 0 關閉預算功能）：');
+            if (input === null) return;
+            const val = parseInt(input);
+            if (isNaN(val) || val < 0) { showToast('請輸入有效數字'); return; }
+            if (val === 0) {
+                state.budget.enabled = false;
+                state.budget.monthly = 0;
+            } else {
+                state.budget.enabled = true;
+                state.budget.monthly = val;
+            }
+            saveState();
+            renderAccountingPage();
+            showToast(val === 0 ? '預算功能已關閉' : `✅ 每月預算設定為 $${val}`);
+        }
+
+        function getMonthlySpent() {
+            const now = new Date();
+            const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+            return state.history.filter(h => (h.fullDate || '').startsWith(ym)).reduce((s,h) => s + h.amount, 0);
+        }
+
+        // --- Render Accounting Page ---
+        function renderAccountingPage() {
+            const container = document.getElementById('acct-page-content');
+            if (!container) return;
+            
+            const today = new Date().toISOString().split('T')[0];
+            const todayRecords = state.history.filter(h => (h.fullDate || '') === today);
+            const todaySpent = todayRecords.reduce((s, h) => s + h.amount, 0);
+            const todayCount = todayRecords.length;
+            const todayCoins = Math.max(0, todayRecords.length * 50);
+            const streak = state.accountingStreak.days || 0;
+            const dailyCount = state.accountingDaily.count || 0;
+
+            // Buff tier info
+            let buffName = '未啟動', buffDesc = '記帳 1 筆啟動';
+            if (dailyCount >= 5) { buffName = '鈔能力 MAX'; buffDesc = 'ATK+30% HP全回 暴擊UP'; }
+            else if (dailyCount >= 3) { buffName = '鈔能力 Lv.II'; buffDesc = 'ATK+20% HP回復30%'; }
+            else if (dailyCount >= 1) { buffName = '鈔能力 Lv.I'; buffDesc = 'ATK+10% HP回復50%'; }
+
+            // Pie chart data
+            const catMap = {'🍖':'飲食','🥤':'飲料','🚌':'交通','🛒':'購物','🎮':'娛樂'};
+            const catColors = {'🍖':'#e74c3c','🥤':'#3498db','🚌':'#2ecc71','🛒':'#f39c12','🎮':'#9b59b6'};
+            let catTotals = {};
+            state.history.forEach(h => { catTotals[h.cat] = (catTotals[h.cat]||0) + h.amount; });
+            const totalAll = Object.values(catTotals).reduce((a,b)=>a+b, 0) || 1;
+            let conicParts = [], legendHtml = '', angle = 0;
+            Object.entries(catTotals).sort((a,b)=>b[1]-a[1]).forEach(([cat, amt]) => {
+                const pct = (amt / totalAll * 100);
+                const color = catColors[cat] || '#888';
+                conicParts.push(`${color} ${angle}deg ${angle + pct * 3.6}deg`);
+                angle += pct * 3.6;
+                legendHtml += `<div class="pie-legend-item"><div class="pie-legend-dot" style="background:${color}"></div>${catMap[cat]||cat} $${amt} (${Math.round(pct)}%)</div>`;
+            });
+            const conicGrad = conicParts.length > 0 ? `conic-gradient(${conicParts.join(',')})` : '#333';
+
+            // 7-day bar chart
+            let barHtml = '';
+            const dayLabels = ['日','一','二','三','四','五','六'];
+            let maxDay = 1;
+            let dayData = [];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(Date.now() - i * 86400000);
+                const ds = d.toISOString().split('T')[0];
+                const dayTotal = state.history.filter(h => (h.fullDate || '') === ds).reduce((s,h) => s + h.amount, 0);
+                dayData.push({ label: dayLabels[d.getDay()], total: dayTotal, isToday: i === 0 });
+                if (dayTotal > maxDay) maxDay = dayTotal;
+            }
+            dayData.forEach(dd => {
+                const h = Math.max(2, (dd.total / maxDay) * 90);
+                barHtml += `<div class="bar-col"><div class="bar-col-val">${dd.total > 0 ? '$'+dd.total : ''}</div><div class="bar-col-bar" style="height:${h}px;${dd.isToday ? 'background:linear-gradient(to top,#f39c12,#f1c40f);' : ''}"></div><div class="bar-col-label">${dd.label}</div></div>`;
+            });
+
+            // Budget
+            const monthlySpent = getMonthlySpent();
+            let budgetHtml = '';
+            if (state.budget.enabled && state.budget.monthly > 0) {
+                const pct = Math.min(100, monthlySpent / state.budget.monthly * 100);
+                const budgetColor = pct > 100 ? '#e74c3c' : (pct > 80 ? '#f39c12' : '#2ecc71');
+                budgetHtml = `
+                    <div class="budget-section">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div class="acct-chart-title" style="margin:0;">📋 本月預算</div>
+                            <div style="font-size:11px; cursor:pointer; color:var(--text-dim);" onclick="setBudget()">修改</div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:13px;">
+                            <span>已花 $${monthlySpent}</span>
+                            <span style="color:${budgetColor};">/ $${state.budget.monthly}</span>
+                        </div>
+                        <div class="budget-bar-outer">
+                            <div class="budget-bar-inner" style="width:${pct}%; background:${budgetColor};"></div>
+                        </div>
+                        ${pct > 100 ? '<div style="color:#e74c3c; font-size:11px; margin-top:5px; text-align:center;">⚠️ 已超支！下月繼續努力</div>' : ''}
+                    </div>`;
+            } else {
+                budgetHtml = `
+                    <div class="budget-section" style="text-align:center;">
+                        <div style="color:var(--text-dim); font-size:13px; margin-bottom:10px;">尚未設定每月預算</div>
+                        <button onclick="setBudget()" style="padding:8px 20px; background:var(--text-gold); color:#000; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">設定預算</button>
+                    </div>`;
+            }
+
+            // Streak dots (show 7 days)
+            const milestones = [3, 7, 14, 30];
+            let streakDotsHtml = '';
+            for (let i = 1; i <= 7; i++) {
+                const isActive = streak >= i;
+                const isMilestone = milestones.includes(i);
+                streakDotsHtml += `<div class="streak-dot ${isActive ? 'active' : ''} ${isMilestone ? 'milestone' : ''}">${i}</div>`;
+            }
+
+            // Achievements
+            let achieveHtml = '';
+            ACCT_ACHIEVEMENTS.forEach(a => {
+                const unlocked = state.achievements[a.id];
+                achieveHtml += `
+                    <div class="achieve-badge ${unlocked ? 'unlocked' : ''}">
+                        <div class="achieve-icon">${a.icon}</div>
+                        <div style="font-weight:bold; margin:4px 0;">${a.name}</div>
+                        <div style="font-size:10px; color:var(--text-dim);">${a.desc}</div>
+                    </div>`;
+            });
+
+            // Golden Dungeon
+            const gdAvailable = state.goldenDungeon.available && state.goldenDungeon.lastReset === today;
+            const gdHtml = `
+                <button class="golden-dungeon-btn" ${gdAvailable ? '' : 'disabled'} onclick="startGoldenDungeon()">
+                    ⚔️ 黃金副本 ${gdAvailable ? '— 可挑戰！' : `(記帳 ${Math.max(0, 3 - dailyCount)} 筆後解鎖)`}
+                </button>`;
+
+            container.innerHTML = `
+                <!-- Summary Cards -->
+                <div class="acct-summary">
+                    <div class="acct-card"><div class="acct-label">今日支出</div><div class="acct-val">$${todaySpent}</div></div>
+                    <div class="acct-card"><div class="acct-label">今日筆數</div><div class="acct-val">${todayCount}</div></div>
+                    <div class="acct-card"><div class="acct-label">連續天數</div><div class="acct-val">🔥${streak}</div></div>
+                </div>
+
+                <!-- Buff Tier -->
+                <div class="buff-tier-info">
+                    💪 <b>${buffName}</b>：${buffDesc}
+                </div>
+
+                <!-- Golden Dungeon -->
+                ${gdHtml}
+
+                <!-- Record Button -->
+                <button class="acct-btn-record" onclick="openAccountingModal()">📝 記一筆帳</button>
+
+                <!-- Streak Bar -->
+                <div class="acct-streak-bar">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div class="acct-chart-title" style="margin:0;">🔥 連續記帳 ${streak} 天</div>
+                        <div style="font-size:11px; color:var(--text-dim);">下一獎勵: ${streak < 3 ? '3天' : streak < 7 ? '7天' : streak < 14 ? '14天' : streak < 30 ? '30天' : 'MAX!'}
+                        </div>
+                    </div>
+                    <div class="streak-dots">${streakDotsHtml}</div>
+                </div>
+
+                ${budgetHtml}
+
+                <!-- Pie Chart -->
+                <div class="acct-chart-box">
+                    <div class="acct-chart-title">📊 消費分類佔比</div>
+                    <div class="pie-chart-container">
+                        <div style="width:100px; height:100px; border-radius:50%; background:${conicGrad}; flex-shrink:0;"></div>
+                        <div class="pie-legend">${legendHtml || '<span style="color:var(--text-dim);">尚無紀錄</span>'}</div>
+                    </div>
+                </div>
+
+                <!-- 7-Day Bar Chart -->
+                <div class="acct-chart-box">
+                    <div class="acct-chart-title">📈 近 7 日支出趨勢</div>
+                    <div class="bar-chart">${barHtml}</div>
+                </div>
+
+                <!-- Achievements -->
+                <div class="acct-chart-box">
+                    <div class="acct-chart-title">🏆 記帳成就</div>
+                    <div class="acct-achieve">${achieveHtml}</div>
+                </div>
+
+                <!-- Recent Records -->
+                <div class="acct-chart-box">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div class="acct-chart-title" style="margin:0;">📋 最近紀錄</div>
+                        <div style="font-size:11px; cursor:pointer; color:var(--text-dim);" onclick="openHistory()">查看全部</div>
+                    </div>
+                    ${state.history.slice(0, 5).map(h => `
+                        <div class="history-item">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <div style="font-size:20px;">${h.cat}</div>
+                                <div>
+                                    <div style="font-size:13px; font-weight:bold;">${h.item || '未紀錄'} <span style="font-size:10px; color:var(--text-dim); font-weight:normal;">@${h.store || '無'}</span></div>
+                                    <div style="font-size:10px; color:var(--text-dim);">${h.date}</div>
+                                </div>
+                            </div>
+                            <div style="color:var(--hp-red); font-weight:bold;">-$${h.amount}</div>
+                        </div>
+                    `).join('') || '<div style="text-align:center; padding:15px; color:var(--text-dim);">尚無紀錄</div>'}
+                </div>
+            `;
         }
 
         // --- Profile (我的) ---
@@ -1662,6 +1996,10 @@
             document.getElementById(`page-${pageId}`).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             navItem.classList.add('active');
+            
+            if (pageId === 'accounting') {
+                renderAccountingPage();
+            }
         }
 
         window.onload = init;
