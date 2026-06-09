@@ -178,6 +178,9 @@
         .gacha-item-icon { font-size: 100px; filter: drop-shadow(0 0 20px rgba(255,255,255,0.5)); margin-bottom: 20px; }
         .gacha-item-name { font-size: 32px; font-weight: bold; color: var(--text-gold); text-shadow: 0 0 10px rgba(255,204,0,0.5); margin-bottom: 5px; }
         .gacha-item-type { font-size: 16px; color: var(--text-dim); margin-bottom: 40px; }
+        .gacha-multi-item { display:flex; flex-direction:column; align-items:center; background:rgba(255,255,255,0.1); padding:10px 5px; border-radius:10px; border:1px solid #555; justify-content:center;}
+        .gacha-multi-item .icon { font-size:36px; margin-bottom:5px; }
+        .gacha-multi-item .name { font-size:10px; font-weight:bold; white-space:nowrap; text-align:center; }
         .gacha-close-btn { padding: 12px 30px; background: transparent; border: 2px solid #fff; color: #fff; font-size: 18px; border-radius: 30px; cursor: pointer; transition: 0.2s; }
         .gacha-close-btn:hover { background: #fff; color: #000; }
 
@@ -329,13 +332,19 @@
                     <div style="font-size:60px;">🛡️</div>
                     <h3>匠人鐵砧 (裝備池)</h3>
                     <p style="font-size:12px; color:var(--text-dim);">抽取各部位防具與武器<br>提升基礎數值</p>
-                    <button onclick="drawGacha('equip')">花費 300 🪙 抽取</button>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="drawGacha('equip', 1)">300 🪙<br>單抽</button>
+                        <button onclick="drawGacha('equip', 10)" style="background: linear-gradient(to right, #f39c12, #e67e22);">3000 🪙<br>十連抽</button>
+                    </div>
                 </div>
                 <div class="gacha-banner glass-panel">
                     <div style="font-size:60px;">📜</div>
                     <h3>賢者書庫 (技能池)</h3>
                     <p style="font-size:12px; color:var(--text-dim);">抽取強大的戰鬥技能<br>獲得扭轉戰局的力量</p>
-                    <button onclick="drawGacha('skill')" style="background: linear-gradient(to right, #2980b9, #3498db); box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);">花費 500 🪙 抽取</button>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="drawGacha('skill', 1)" style="background: linear-gradient(to right, #2980b9, #3498db); box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);">500 🪙<br>單抽</button>
+                        <button onclick="drawGacha('skill', 10)" style="background: linear-gradient(to right, #f39c12, #e67e22);">5000 🪙<br>十連抽</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -459,11 +468,18 @@
                 <div class="meteor" id="gacha-meteor"></div>
             </div>
             <div class="gacha-flash" id="gacha-flash"></div>
-            <div class="gacha-result" id="gacha-result" style="display:none;">
-                <div class="gacha-item-icon" id="gacha-item-icon">❓</div>
-                <div class="gacha-item-name" id="gacha-item-name">未知物品</div>
-                <div class="gacha-item-type" id="gacha-item-type">武器</div>
-                <button class="gacha-close-btn" onclick="closeGachaAnimation()">點擊繼續</button>
+            <div class="gacha-result" id="gacha-result" style="display:none; width:100%; max-width:414px; padding:20px;">
+                <div id="gacha-single-view" style="display:flex; flex-direction:column; align-items:center; width:100%;">
+                    <div class="gacha-item-icon" id="gacha-item-icon">❓</div>
+                    <div class="gacha-item-name" id="gacha-item-name">未知物品</div>
+                    <div class="gacha-item-type" id="gacha-item-type">武器</div>
+                </div>
+                <div id="gacha-multi-view" style="display:none; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 30px; width:100%;">
+                    <!-- items injected here -->
+                </div>
+                <div style="text-align:center; width:100%;">
+                    <button class="gacha-close-btn" onclick="closeGachaAnimation()">點擊繼續</button>
+                </div>
             </div>
         </div>
 
@@ -1120,32 +1136,44 @@
 
         let pendingGachaMsg = "";
 
-        function drawGacha(type) {
-            const cost = type === 'equip' ? 300 : 500;
-            if(state.coins < cost) {
-                showToast(`🪙 餘額不足！需要 ${cost} 遊戲幣`);
+        function drawGacha(type, times = 1) {
+            const unitCost = type === 'equip' ? 300 : 500;
+            const totalCost = unitCost * times;
+            if(state.coins < totalCost) {
+                showToast(`🪙 餘額不足！需要 ${totalCost} 遊戲幣`);
                 return;
             }
-            state.coins -= cost;
+            state.coins -= totalCost;
 
-            let item = null;
-            if(type === 'equip') {
-                item = EQUIP_DB[Math.floor(Math.random() * EQUIP_DB.length)];
-                state.inventory.equips.push(item.id);
-                pendingGachaMsg = `🛡️ 獲得裝備：【${item.name}】！`;
-            } else {
-                item = SKILL_DB[Math.floor(Math.random() * SKILL_DB.length)];
-                if(!state.inventory.skills.includes(item.id)) {
-                    state.inventory.skills.push(item.id);
-                    pendingGachaMsg = `📜 習得技能：【${item.name}】！`;
+            let drawnItems = [];
+            for (let i = 0; i < times; i++) {
+                if(type === 'equip') {
+                    const item = EQUIP_DB[Math.floor(Math.random() * EQUIP_DB.length)];
+                    state.inventory.equips.push(item.id);
+                    drawnItems.push(item);
                 } else {
-                    state.coins += 200;
-                    pendingGachaMsg = `📜 技能重複，轉換為 200 🪙`;
+                    const item = SKILL_DB[Math.floor(Math.random() * SKILL_DB.length)];
+                    if(!state.inventory.skills.includes(item.id)) {
+                        state.inventory.skills.push(item.id);
+                        drawnItems.push(item);
+                    } else {
+                        state.coins += 200;
+                        drawnItems.push({ ...item, isDup: true });
+                    }
                 }
             }
+            
             saveState();
             renderRolePage(); 
-            playGachaAnimation(item);
+            
+            if (times === 1) {
+                if (drawnItems[0].isDup) pendingGachaMsg = `📜 技能重複，轉換為 200 🪙`;
+                else pendingGachaMsg = type === 'equip' ? `🛡️ 獲得裝備：【${drawnItems[0].name}】！` : `📜 習得技能：【${drawnItems[0].name}】！`;
+                playGachaAnimation(drawnItems[0]);
+            } else {
+                pendingGachaMsg = `🎉 十連抽完成！`;
+                playTenPullAnimation(drawnItems, type);
+            }
         }
 
         function playGachaAnimation(item) {
@@ -1156,6 +1184,8 @@
             
             overlay.style.display = 'flex';
             result.style.display = 'none';
+            document.getElementById('gacha-single-view').style.display = 'flex';
+            document.getElementById('gacha-multi-view').style.display = 'none';
             meteor.className = 'meteor';
             flash.className = 'gacha-flash';
             
@@ -1170,7 +1200,7 @@
                 setTimeout(() => {
                     result.style.display = 'flex';
                     document.getElementById('gacha-item-icon').innerText = item.icon;
-                    document.getElementById('gacha-item-name').innerText = item.name;
+                    document.getElementById('gacha-item-name').innerText = item.name + (item.isDup ? " (重複)" : "");
                     document.getElementById('gacha-item-type').innerText = item.rarity ? getTypeName(item.type) : '戰鬥技能';
                     
                     if(rarity === 'legendary') document.getElementById('gacha-item-name').style.color = '#f1c40f';
@@ -1178,6 +1208,55 @@
                     else if(rarity === 'rare') document.getElementById('gacha-item-name').style.color = '#3498db';
                     else document.getElementById('gacha-item-name').style.color = '#bdc3c7';
                     
+                }, 150);
+            }, 1000);
+        }
+
+        function playTenPullAnimation(items) {
+            const overlay = document.getElementById('gacha-overlay');
+            const meteor = document.getElementById('gacha-meteor');
+            const flash = document.getElementById('gacha-flash');
+            const result = document.getElementById('gacha-result');
+            
+            overlay.style.display = 'flex';
+            result.style.display = 'none';
+            document.getElementById('gacha-single-view').style.display = 'none';
+            document.getElementById('gacha-multi-view').style.display = 'grid';
+            meteor.className = 'meteor';
+            flash.className = 'gacha-flash';
+            
+            let highestRarity = 'normal';
+            if (items.some(i => i.rarity === 'legendary')) highestRarity = 'legendary';
+            else if (items.some(i => i.rarity === 'epic' || !i.rarity)) highestRarity = 'epic';
+            else if (items.some(i => i.rarity === 'rare')) highestRarity = 'rare';
+
+            meteor.classList.add(highestRarity);
+            void meteor.offsetWidth; 
+            meteor.classList.add('animate');
+            
+            setTimeout(() => {
+                flash.classList.add('animate');
+                setTimeout(() => {
+                    result.style.display = 'flex';
+                    const multiView = document.getElementById('gacha-multi-view');
+                    multiView.innerHTML = '';
+                    items.forEach(item => {
+                        let r = item.rarity || 'epic';
+                        let color = '#fff';
+                        if(r === 'legendary') color = '#f1c40f';
+                        else if(r === 'epic') color = '#e056fd';
+                        else if(r === 'rare') color = '#3498db';
+                        else color = '#bdc3c7';
+                        
+                        let nameTxt = item.name + (item.isDup ? '<br><span style="color:#e74c3c;font-size:8px;">(轉200🪙)</span>' : '');
+
+                        multiView.innerHTML += `
+                            <div class="gacha-multi-item" style="border-color:${color}; box-shadow:0 0 8px ${color}40;">
+                                <div class="icon" style="filter:drop-shadow(0 0 5px ${color});">${item.icon}</div>
+                                <div class="name" style="color:${color};">${nameTxt}</div>
+                            </div>
+                        `;
+                    });
                 }, 150);
             }, 1000);
         }
