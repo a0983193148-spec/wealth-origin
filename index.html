@@ -70,7 +70,7 @@
         .entity { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100px; position: relative; }
         .sprite { font-size: 80px; filter: drop-shadow(0 0 10px rgba(0,0,0,0.8)); transition: transform 0.2s; }
         .sprite.player { transform: scaleX(-1); } 
-        .name-tag { font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000; text-align:center;}
+        .name-tag { font-size: 12px; font-weight: bold; text-shadow: 1px 1px 2px #000; text-align:center; z-index: 10; position: relative; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px; margin-bottom: 5px; }
         .monster-type { font-size:10px; color:#f39c12; margin-top:-5px; }
         
         .bar-container { width: 100%; height: 8px; background: #222; border-radius: 4px; border: 1px solid #000; overflow: hidden; margin-top: 2px;}
@@ -456,6 +456,11 @@
                     <div class="cat-btn" onclick="selectCat(this, '🚌')">🚌</div>
                     <div class="cat-btn" onclick="selectCat(this, '🛒')">🛒</div>
                     <div class="cat-btn" onclick="selectCat(this, '🎮')">🎮</div>
+                </div>
+
+                <div style="padding: 10px 20px; display: flex; flex-direction: column; gap: 10px;">
+                    <input type="text" id="expense-store" placeholder="消費店家 (例如: 7-11)" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #555; background: #222; color: #fff; font-size: 14px;">
+                    <input type="text" id="expense-item" placeholder="商品名稱 (必填)" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #555; background: #222; color: #fff; font-size: 14px;">
                 </div>
 
                 <div class="numpad">
@@ -968,6 +973,8 @@
             document.getElementById('accounting-modal').style.display = 'flex';
             currentAmount = "0";
             document.getElementById('amount-input').innerText = currentAmount;
+            document.getElementById('expense-store').value = '';
+            document.getElementById('expense-item').value = '';
         }
         function closeAccountingModal() {
             document.getElementById('accounting-modal').style.display = 'none';
@@ -989,11 +996,20 @@
                     return;
                 }
                 
+                let itemName = document.getElementById('expense-item').value.trim();
+                let storeName = document.getElementById('expense-store').value.trim();
+                if (!itemName) {
+                    showToast('請輸入商品名稱');
+                    return;
+                }
+                
                 // Add to history
                 state.history.unshift({
                     id: Date.now(),
                     cat: currentCat,
                     amount: amt,
+                    item: itemName,
+                    store: storeName || '無',
                     date: new Date().toLocaleString('zh-TW', {month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'})
                 });
                 if(state.history.length > 50) state.history.pop(); // Keep last 50
@@ -1070,7 +1086,10 @@
                         <div class="history-item">
                             <div style="display:flex; align-items:center; gap:10px;">
                                 <div style="font-size:24px;">${h.cat}</div>
-                                <div style="font-size:12px; color:var(--text-dim);">${h.date}</div>
+                                <div style="display:flex; flex-direction:column;">
+                                    <div style="font-size:14px; font-weight:bold; color:var(--text-light);">${h.item || '未紀錄商品'} <span style="font-size:10px; color:var(--text-dim); font-weight:normal;">@${h.store || '無'}</span></div>
+                                    <div style="font-size:10px; color:var(--text-dim);">${h.date}</div>
+                                </div>
                             </div>
                             <div style="color:var(--hp-red); font-weight:bold; font-size:18px;">-$${h.amount}</div>
                         </div>
