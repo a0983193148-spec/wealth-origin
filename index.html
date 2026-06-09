@@ -2049,6 +2049,7 @@
 
         function renderOffers() {
             const list = document.getElementById('offers-list');
+            if (!list) return;
             list.innerHTML = '';
             OFFERS.forEach(o => {
                 list.innerHTML += `
