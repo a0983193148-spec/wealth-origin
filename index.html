@@ -1264,6 +1264,8 @@
             }
         }
 
+        const GACHA_VIDEO_CUT_TIME = 5; // seconds - cut before UR text appears
+
         function playGachaAnimation(item) {
             const overlay = document.getElementById('gacha-overlay');
             const result = document.getElementById('gacha-result');
@@ -1281,7 +1283,6 @@
             btn.classList.remove('show');
             card.classList.remove('flipped');
             
-            // Hide old effects
             circle.style.display = 'none';
             document.getElementById('meteor-container').style.display = 'none';
             
@@ -1292,42 +1293,75 @@
             else if(r === 'rare') color = '#3498db';
             else color = '#bdc3c7';
             
-            // Play video
             video.src = './assets/gacha_video.mp4';
             video.style.display = 'block';
             video.currentTime = 0;
             video.play().catch(() => {});
             
-            // When video ends, show result
-            video.onended = () => {
-                video.style.display = 'none';
-                
-                const flash = document.getElementById('gacha-flash');
-                flash.classList.remove('animate');
-                void flash.offsetWidth;
-                flash.classList.add('animate');
-                
-                overlay.classList.add('shake');
-                setTimeout(() => overlay.classList.remove('shake'), 500);
-
-                setTimeout(() => {
-                    result.style.display = 'flex';
-                    singleView.style.display = 'flex';
+            let revealed = false;
+            video.ontimeupdate = () => {
+                if (!revealed && video.currentTime >= GACHA_VIDEO_CUT_TIME) {
+                    revealed = true;
+                    video.pause();
+                    video.style.display = 'none';
+                    video.ontimeupdate = null;
                     
-                    document.getElementById('gacha-item-icon').innerText = item.icon;
-                    document.getElementById('gacha-item-icon').style.filter = `drop-shadow(0 0 20px ${color})`;
-                    document.getElementById('gacha-item-name').innerText = item.name + (item.isDup ? " (重複)" : "");
-                    document.getElementById('gacha-item-name').style.color = color;
-                    document.getElementById('gacha-item-type').innerText = r ? getTypeName(item.type) : '戰鬥技能';
-                    document.getElementById('single-card-back').style.border = `2px solid ${color}`;
-                    document.getElementById('single-card-back').style.boxShadow = `0 0 30px ${color}80`;
+                    const flash = document.getElementById('gacha-flash');
+                    flash.classList.remove('animate');
+                    void flash.offsetWidth;
+                    flash.classList.add('animate');
+                    
+                    overlay.classList.add('shake');
+                    setTimeout(() => overlay.classList.remove('shake'), 500);
 
                     setTimeout(() => {
-                        card.classList.add('flipped');
-                        setTimeout(() => btn.classList.add('show'), 600);
-                    }, 300);
-                    
-                }, 150);
+                        result.style.display = 'flex';
+                        singleView.style.display = 'flex';
+                        
+                        document.getElementById('gacha-item-icon').innerText = item.icon;
+                        document.getElementById('gacha-item-icon').style.filter = `drop-shadow(0 0 20px ${color})`;
+                        document.getElementById('gacha-item-name').innerText = item.name + (item.isDup ? " (重複)" : "");
+                        document.getElementById('gacha-item-name').style.color = color;
+                        document.getElementById('gacha-item-type').innerText = r ? getTypeName(item.type) : '戰鬥技能';
+                        document.getElementById('single-card-back').style.border = `2px solid ${color}`;
+                        document.getElementById('single-card-back').style.boxShadow = `0 0 30px ${color}80`;
+
+                        setTimeout(() => {
+                            card.classList.add('flipped');
+                            setTimeout(() => btn.classList.add('show'), 600);
+                        }, 300);
+                        
+                    }, 150);
+                }
+            };
+            video.onended = () => {
+                if (!revealed) {
+                    video.ontimeupdate = null;
+                    revealed = true;
+                    video.style.display = 'none';
+                    // same reveal logic as fallback
+                    const flash = document.getElementById('gacha-flash');
+                    flash.classList.remove('animate');
+                    void flash.offsetWidth;
+                    flash.classList.add('animate');
+                    overlay.classList.add('shake');
+                    setTimeout(() => overlay.classList.remove('shake'), 500);
+                    setTimeout(() => {
+                        result.style.display = 'flex';
+                        singleView.style.display = 'flex';
+                        document.getElementById('gacha-item-icon').innerText = item.icon;
+                        document.getElementById('gacha-item-icon').style.filter = `drop-shadow(0 0 20px ${color})`;
+                        document.getElementById('gacha-item-name').innerText = item.name + (item.isDup ? " (重複)" : "");
+                        document.getElementById('gacha-item-name').style.color = color;
+                        document.getElementById('gacha-item-type').innerText = r ? getTypeName(item.type) : '戰鬥技能';
+                        document.getElementById('single-card-back').style.border = `2px solid ${color}`;
+                        document.getElementById('single-card-back').style.boxShadow = `0 0 30px ${color}80`;
+                        setTimeout(() => {
+                            card.classList.add('flipped');
+                            setTimeout(() => btn.classList.add('show'), 600);
+                        }, 300);
+                    }, 150);
+                }
             };
         }
 
@@ -1346,7 +1380,6 @@
             multiView.style.display = 'none';
             btn.classList.remove('show');
             
-            // Hide old effects
             circle.style.display = 'none';
             document.getElementById('meteor-container').style.display = 'none';
 
@@ -1360,14 +1393,19 @@
             else if(highestRarity === 'epic') highestColor = '#e056fd';
             else if(highestRarity === 'rare') highestColor = '#3498db';
 
-            // Play video
             video.src = './assets/gacha_video.mp4';
             video.style.display = 'block';
             video.currentTime = 0;
             video.play().catch(() => {});
             
-            video.onended = () => {
+            let revealed = false;
+            const revealTenPull = () => {
+                if (revealed) return;
+                revealed = true;
+                video.pause();
                 video.style.display = 'none';
+                video.ontimeupdate = null;
+                video.onended = null;
                 
                 const flash = document.getElementById('gacha-flash');
                 flash.classList.remove('animate');
@@ -1420,12 +1458,18 @@
                     
                 }, 150);
             };
+            
+            video.ontimeupdate = () => {
+                if (video.currentTime >= GACHA_VIDEO_CUT_TIME) revealTenPull();
+            };
+            video.onended = revealTenPull;
         }
 
         function closeGachaAnimation() {
             const video = document.getElementById('gacha-video');
             video.pause();
             video.style.display = 'none';
+            video.ontimeupdate = null;
             video.onended = null;
             document.getElementById('gacha-overlay').style.display = 'none';
             if(pendingGachaMsg) showToast(pendingGachaMsg);
